@@ -89,10 +89,14 @@ class NowPlayingPage extends StatelessWidget {
                     }
                   },
                   onPrevious: () {
-                    // TODO: Skip to previous
+                    context.read<PlaybackBloc>().add(
+                      const PlaybackEvent.skipToPreviousRequested(),
+                    );
                   },
                   onNext: () {
-                    // TODO: Skip to next
+                    context.read<PlaybackBloc>().add(
+                      const PlaybackEvent.skipToNextRequested(),
+                    );
                   },
                 ),
                 const SizedBox(height: 32),
@@ -196,7 +200,9 @@ class NowPlayingPage extends StatelessWidget {
                   : Colors.grey[600],
             ),
             onPressed: () {
-              // TODO: Toggle shuffle
+              context.read<PlaybackBloc>().add(
+                PlaybackEvent.shuffleToggled(!playbackState.shuffleEnabled),
+              );
             },
           ),
           IconButton(
@@ -207,7 +213,10 @@ class NowPlayingPage extends StatelessWidget {
                   : Colors.grey[600],
             ),
             onPressed: () {
-              // TODO: Cycle repeat mode
+              final nextMode = _getNextRepeatMode(playbackState.repeatMode);
+              context.read<PlaybackBloc>().add(
+                PlaybackEvent.repeatModeChanged(nextMode),
+              );
             },
           ),
           IconButton(
@@ -239,6 +248,14 @@ class NowPlayingPage extends StatelessWidget {
       RepeatMode.off => Icons.repeat,
       RepeatMode.all => Icons.repeat_on,
       RepeatMode.one => Icons.repeat_one_on,
+    };
+  }
+
+  RepeatMode _getNextRepeatMode(RepeatMode current) {
+    return switch (current) {
+      RepeatMode.off => RepeatMode.all,
+      RepeatMode.all => RepeatMode.one,
+      RepeatMode.one => RepeatMode.off,
     };
   }
 

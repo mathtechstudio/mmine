@@ -181,7 +181,35 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
   @override
   Future<Either<Failure, void>> setShuffleEnabled(bool enabled) async {
     try {
-      _updateState(_currentState.copyWith(shuffleEnabled: enabled));
+      if (enabled) {
+        // Store original queue order before shuffling
+        final originalQueue = List<AudioTrack>.from(_currentState.queue);
+        final currentTrack = _currentState.currentTrack;
+
+        if (currentTrack != null && originalQueue.isNotEmpty) {
+          // Remove current track from queue
+          originalQueue.removeWhere((track) => track.id == currentTrack.id);
+
+          // Shuffle remaining tracks
+          originalQueue.shuffle();
+
+          // Create new queue with current track first, then shuffled tracks
+          final shuffledQueue = [currentTrack, ...originalQueue];
+
+          _updateState(
+            _currentState.copyWith(
+              shuffleEnabled: true,
+              queue: shuffledQueue,
+              currentIndex: 0,
+            ),
+          );
+        } else {
+          _updateState(_currentState.copyWith(shuffleEnabled: true));
+        }
+      } else {
+        // Disable shuffle - keep current order
+        _updateState(_currentState.copyWith(shuffleEnabled: false));
+      }
       return const Right(null);
     } catch (e) {
       return Left(PlaybackFailure('Failed to set shuffle: ${e.toString()}'));

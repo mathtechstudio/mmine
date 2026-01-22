@@ -6,8 +6,10 @@ import 'package:mmine/features/music_player/data/datasources/file_system_data_so
 import 'package:mmine/features/music_player/data/datasources/local_database_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/metadata_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/permission_data_source.dart';
+import 'package:mmine/features/music_player/data/datasources/playlist_data_source.dart';
 import 'package:mmine/features/music_player/data/repositories/audio_repository_impl.dart';
 import 'package:mmine/features/music_player/data/repositories/playback_repository_impl.dart';
+import 'package:mmine/features/music_player/data/repositories/playlist_repository_impl.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_albums_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_artists_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_tracks_use_case.dart';
@@ -21,6 +23,13 @@ import 'package:mmine/features/music_player/domain/usecases/playback/resume_play
 import 'package:mmine/features/music_player/domain/usecases/playback/seek_to_position_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_speed_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_volume_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/toggle_shuffle_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/add_track_to_playlist_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/create_playlist_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/delete_playlist_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/get_all_playlists_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/remove_track_from_playlist_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playlist/reorder_playlist_tracks_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/add_to_queue_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/clear_queue_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/play_next_use_case.dart';
@@ -31,6 +40,7 @@ import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_next_u
 import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_previous_use_case.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/playlist/playlist_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/queue/queue_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/library_page.dart';
 
@@ -59,11 +69,17 @@ class MyApp extends StatelessWidget {
     final metadataDataSource = MetadataDataSource();
     final fileSystemDataSource = FileSystemDataSource();
     final localDatabaseDataSource = LocalDatabaseDataSource(database);
+    final playlistDataSource = PlaylistDataSource(database);
+
     final audioRepository = AudioRepositoryImpl(
       fileSystemDataSource: fileSystemDataSource,
       metadataDataSource: metadataDataSource,
       databaseDataSource: localDatabaseDataSource,
       permissionDataSource: permissionDataSource,
+    );
+
+    final playlistRepository = PlaylistRepositoryImpl(
+      playlistDataSource: playlistDataSource,
     );
 
     final audioPlayerDataSource = AudioPlayerDataSource();
@@ -95,6 +111,7 @@ class MyApp extends StatelessWidget {
             setQueue: SetQueueUseCase(playbackRepository),
             skipToNext: SkipToNextUseCase(playbackRepository),
             skipToPrevious: SkipToPreviousUseCase(playbackRepository),
+            toggleShuffle: ToggleShuffleUseCase(playbackRepository),
             playbackRepository: playbackRepository,
           ),
         ),
@@ -106,6 +123,20 @@ class MyApp extends StatelessWidget {
             reorderQueue: ReorderQueueUseCase(playbackRepository),
             clearQueue: ClearQueueUseCase(playbackRepository),
             playbackRepository: playbackRepository,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => PlaylistBloc(
+            getAllPlaylists: GetAllPlaylistsUseCase(playlistRepository),
+            createPlaylist: CreatePlaylistUseCase(playlistRepository),
+            deletePlaylist: DeletePlaylistUseCase(playlistRepository),
+            addTrackToPlaylist: AddTrackToPlaylistUseCase(playlistRepository),
+            removeTrackFromPlaylist: RemoveTrackFromPlaylistUseCase(
+              playlistRepository,
+            ),
+            reorderPlaylistTracks: ReorderPlaylistTracksUseCase(
+              playlistRepository,
+            ),
           ),
         ),
       ],

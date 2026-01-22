@@ -13,6 +13,7 @@ import 'package:mmine/features/music_player/domain/usecases/playback/resume_play
 import 'package:mmine/features/music_player/domain/usecases/playback/seek_to_position_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_speed_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_volume_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/toggle_shuffle_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/set_queue_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_next_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_previous_use_case.dart';
@@ -31,6 +32,7 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackBlocState> {
   final SetQueueUseCase setQueue;
   final SkipToNextUseCase skipToNext;
   final SkipToPreviousUseCase skipToPrevious;
+  final ToggleShuffleUseCase toggleShuffle;
   final PlaybackRepository playbackRepository;
 
   StreamSubscription<PlaybackState>? _playbackStateSubscription;
@@ -45,6 +47,7 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackBlocState> {
     required this.setQueue,
     required this.skipToNext,
     required this.skipToPrevious,
+    required this.toggleShuffle,
     required this.playbackRepository,
   }) : super(const PlaybackBlocState.initial()) {
     on<_PlayRequested>(_onPlayRequested);
@@ -55,6 +58,9 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackBlocState> {
     on<_SpeedChanged>(_onSpeedChanged);
     on<_SkipToNextRequested>(_onSkipToNextRequested);
     on<_SkipToPreviousRequested>(_onSkipToPreviousRequested);
+    on<_ShuffleToggled>(_onShuffleToggled);
+    on<_RepeatModeChanged>(_onRepeatModeChanged);
+    on<_SetQueueRequested>(_onSetQueueRequested);
     on<_PlaybackStateUpdated>(_onPlaybackStateUpdated);
 
     _playbackStateSubscription = playbackRepository.playbackStateStream.listen((
@@ -157,6 +163,46 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackBlocState> {
     Emitter<PlaybackBlocState> emit,
   ) async {
     final result = await skipToPrevious(NoParams());
+
+    result.fold(
+      (failure) => emit(PlaybackBlocState.error(_mapFailureToMessage(failure))),
+      (_) => null,
+    );
+  }
+
+  Future<void> _onShuffleToggled(
+    _ShuffleToggled event,
+    Emitter<PlaybackBlocState> emit,
+  ) async {
+    final result = await toggleShuffle(event.enabled);
+
+    result.fold(
+      (failure) => emit(PlaybackBlocState.error(_mapFailureToMessage(failure))),
+      (_) => null,
+    );
+  }
+
+  Future<void> _onRepeatModeChanged(
+    _RepeatModeChanged event,
+    Emitter<PlaybackBlocState> emit,
+  ) async {
+    final result = await playbackRepository.setRepeatMode(event.mode);
+
+    result.fold(
+      (failure) => emit(PlaybackBlocState.error(_mapFailureToMessage(failure))),
+      (_) => null,
+    );
+  }
+
+  Future<void> _onSetQueueRequested(
+    _SetQueueRequested event,
+    Emitter<PlaybackBlocState> emit,
+  ) async {
+    emit(const PlaybackBlocState.loading());
+
+    final result = await setQueue(
+      SetQueueParams(tracks: event.tracks, startIndex: event.startIndex),
+    );
 
     result.fold(
       (failure) => emit(PlaybackBlocState.error(_mapFailureToMessage(failure))),

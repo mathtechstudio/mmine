@@ -23,6 +23,16 @@ sealed class PlaybackEvent with _$PlaybackEvent {
   const factory PlaybackEvent.skipToPreviousRequested() =
       _SkipToPreviousRequested;
 
+  const factory PlaybackEvent.shuffleToggled(bool enabled) = _ShuffleToggled;
+
+  const factory PlaybackEvent.repeatModeChanged(RepeatMode mode) =
+      _RepeatModeChanged;
+
+  const factory PlaybackEvent.setQueueRequested(
+    List<AudioTrack> tracks,
+    int startIndex,
+  ) = _SetQueueRequested;
+
   const factory PlaybackEvent.playbackStateUpdated(
     PlaybackState playbackState,
   ) = _PlaybackStateUpdated;

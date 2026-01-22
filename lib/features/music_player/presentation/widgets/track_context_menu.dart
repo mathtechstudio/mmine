@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/playlist/playlist_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/queue/queue_bloc.dart';
 
 class TrackContextMenu {
@@ -69,13 +70,7 @@ class TrackContextMenu {
                 title: 'Add to Playlist',
                 onTap: () {
                   Navigator.pop(bottomSheetContext);
-                  // TODO: Show playlist selection dialog
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Playlist feature coming soon'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
+                  _showPlaylistSelectionDialog(context, track);
                 },
               ),
               _buildMenuItem(
@@ -240,5 +235,91 @@ class TrackContextMenu {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds.remainder(60);
     return '${minutes.toString().padLeft(1, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  static void _showPlaylistSelectionDialog(
+    BuildContext context,
+    AudioTrack track,
+  ) {
+    final playlistBloc = context.read<PlaylistBloc>();
+    playlistBloc.add(const PlaylistEvent.loadPlaylistsRequested());
+
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Add to Playlist'),
+          content: BlocBuilder<PlaylistBloc, PlaylistBlocState>(
+            bloc: playlistBloc,
+            builder: (context, state) {
+              return state.when(
+                initial: () => const SizedBox(
+                  height: 100,
+                  child: Center(child: Text('Loading...')),
+                ),
+                loading: () => const SizedBox(
+                  height: 100,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                loaded: (playlists) {
+                  if (playlists.isEmpty) {
+                    return const SizedBox(
+                      height: 100,
+                      child: Center(
+                        child: Text(
+                          'No playlists available.\nCreate one first.',
+                        ),
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: playlists.length,
+                      itemBuilder: (context, index) {
+                        final playlist = playlists[index];
+                        return ListTile(
+                          leading: const Icon(Icons.playlist_play),
+                          title: Text(playlist.name),
+                          subtitle: Text(
+                            '${playlist.trackIds.length} ${playlist.trackIds.length == 1 ? 'track' : 'tracks'}',
+                          ),
+                          onTap: () {
+                            playlistBloc.add(
+                              PlaylistEvent.addTrackToPlaylistRequested(
+                                playlist.id,
+                                track.id,
+                              ),
+                            );
+                            Navigator.pop(dialogContext);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Added to ${playlist.name}'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+                error: (message) => SizedBox(
+                  height: 100,
+                  child: Center(child: Text('Error: $message')),
+                ),
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

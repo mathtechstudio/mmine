@@ -6,6 +6,7 @@ import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/albums_tab.dart';
 import 'package:mmine/features/music_player/presentation/pages/artists_tab.dart';
+import 'package:mmine/features/music_player/presentation/pages/playlist_page.dart';
 import 'package:mmine/features/music_player/presentation/pages/songs_tab.dart';
 import 'package:mmine/features/music_player/presentation/widgets/now_playing_bar.dart';
 
@@ -25,7 +26,7 @@ class _LibraryPageState extends State<LibraryPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -92,6 +93,7 @@ class _LibraryPageState extends State<LibraryPage>
             Tab(text: 'Songs'),
             Tab(text: 'Artists'),
             Tab(text: 'Albums'),
+            Tab(text: 'Playlists'),
           ],
         ),
       ),
@@ -100,7 +102,12 @@ class _LibraryPageState extends State<LibraryPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [SongsTab(), ArtistsTab(), AlbumsTab()],
+              children: const [
+                SongsTab(),
+                ArtistsTab(),
+                AlbumsTab(),
+                PlaylistPage(),
+              ],
             ),
           ),
           const NowPlayingBar(),
