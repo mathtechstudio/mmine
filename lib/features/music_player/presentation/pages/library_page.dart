@@ -1,0 +1,159 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
+import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
+import 'package:mmine/features/music_player/presentation/pages/albums_tab.dart';
+import 'package:mmine/features/music_player/presentation/pages/artists_tab.dart';
+import 'package:mmine/features/music_player/presentation/pages/songs_tab.dart';
+
+class LibraryPage extends StatefulWidget {
+  const LibraryPage();
+
+  @override
+  State<LibraryPage> createState() => _LibraryPageState();
+}
+
+class _LibraryPageState extends State<LibraryPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: _isSearching ? _buildSearchField() : const Text('Library'),
+        actions: [
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+              },
+            ),
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                });
+                context.read<LibraryBloc>().add(
+                  const LibraryEvent.searchQueryChanged(''),
+                );
+              },
+            ),
+          PopupMenuButton<AudioFormat?>(
+            icon: const Icon(Icons.filter_list),
+            tooltip: 'Filter by format',
+            onSelected: (format) {
+              context.read<LibraryBloc>().add(
+                LibraryEvent.filterByFormatRequested(format),
+              );
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: null, child: Text('All Formats')),
+              const PopupMenuItem(value: AudioFormat.flac, child: Text('FLAC')),
+              const PopupMenuItem(value: AudioFormat.wav, child: Text('WAV')),
+              const PopupMenuItem(value: AudioFormat.alac, child: Text('ALAC')),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder_open),
+            tooltip: 'Scan directory',
+            onPressed: () {
+              _showScanDialog();
+            },
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Songs'),
+            Tab(text: 'Artists'),
+            Tab(text: 'Albums'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [SongsTab(), ArtistsTab(), AlbumsTab()],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      autofocus: true,
+      decoration: const InputDecoration(
+        hintText: 'Search songs, artists, albums...',
+        border: InputBorder.none,
+      ),
+      style: const TextStyle(color: Colors.white),
+      onChanged: (query) {
+        context.read<LibraryBloc>().add(LibraryEvent.searchQueryChanged(query));
+      },
+    );
+  }
+
+  void _showScanDialog() {
+    final directoryController = TextEditingController();
+
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Scan Directory'),
+          content: TextField(
+            controller: directoryController,
+            decoration: const InputDecoration(
+              labelText: 'Directory Path',
+              hintText: '/storage/emulated/0/Music',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final path = directoryController.text.trim();
+                if (path.isNotEmpty) {
+                  context.read<LibraryBloc>().add(
+                    LibraryEvent.scanLibraryRequested(path),
+                  );
+                  Navigator.pop(dialogContext);
+                }
+              },
+              child: const Text('Scan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
