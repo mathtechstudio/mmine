@@ -21,8 +21,14 @@ import 'package:mmine/features/music_player/domain/usecases/playback/resume_play
 import 'package:mmine/features/music_player/domain/usecases/playback/seek_to_position_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_speed_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/playback/set_volume_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/add_to_queue_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/clear_queue_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/play_next_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/remove_from_queue_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/reorder_queue_use_case.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/queue/queue_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/library_page.dart';
 
 void main() {
@@ -83,6 +89,16 @@ class MyApp extends StatelessWidget {
             seekToPosition: SeekToPositionUseCase(playbackRepository),
             setVolume: SetVolumeUseCase(playbackRepository),
             setSpeed: SetSpeedUseCase(playbackRepository),
+            playbackRepository: playbackRepository,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => QueueBloc(
+            addToQueue: AddToQueueUseCase(playbackRepository),
+            playNext: PlayNextUseCase(playbackRepository),
+            removeFromQueue: RemoveFromQueueUseCase(playbackRepository),
+            reorderQueue: ReorderQueueUseCase(playbackRepository),
+            clearQueue: ClearQueueUseCase(playbackRepository),
             playbackRepository: playbackRepository,
           ),
         ),

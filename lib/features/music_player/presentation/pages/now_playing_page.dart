@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/domain/entities/playback_state.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
+import 'package:mmine/features/music_player/presentation/pages/queue_page.dart';
 import 'package:mmine/features/music_player/presentation/widgets/audio_quality_badge.dart';
 import 'package:mmine/features/music_player/presentation/widgets/playback_controls.dart';
 import 'package:mmine/features/music_player/presentation/widgets/progress_slider.dart';
@@ -212,7 +213,14 @@ class NowPlayingPage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.queue_music, color: Colors.grey[600]),
             onPressed: () {
-              // TODO: Show queue
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const QueuePage(),
+                  ),
+                ),
+              );
             },
           ),
           IconButton(
