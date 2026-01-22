@@ -7,6 +7,7 @@ import 'package:mmine/features/music_player/presentation/bloc/library/library_bl
 import 'package:mmine/features/music_player/presentation/pages/albums_tab.dart';
 import 'package:mmine/features/music_player/presentation/pages/artists_tab.dart';
 import 'package:mmine/features/music_player/presentation/pages/songs_tab.dart';
+import 'package:mmine/features/music_player/presentation/widgets/now_playing_bar.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage();
@@ -94,9 +95,16 @@ class _LibraryPageState extends State<LibraryPage>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [SongsTab(), ArtistsTab(), AlbumsTab()],
+      body: Column(
+        children: [
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [SongsTab(), ArtistsTab(), AlbumsTab()],
+            ),
+          ),
+          const NowPlayingBar(),
+        ],
       ),
     );
   }

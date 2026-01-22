@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/features/music_player/data/datasources/audio_player_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/database.dart';
 import 'package:mmine/features/music_player/data/datasources/file_system_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/local_database_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/metadata_data_source.dart';
 import 'package:mmine/features/music_player/data/datasources/permission_data_source.dart';
 import 'package:mmine/features/music_player/data/repositories/audio_repository_impl.dart';
+import 'package:mmine/features/music_player/data/repositories/playback_repository_impl.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_albums_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_artists_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_tracks_use_case.dart';
@@ -13,7 +15,14 @@ import 'package:mmine/features/music_player/domain/usecases/audio/get_tracks_by_
 import 'package:mmine/features/music_player/domain/usecases/audio/get_tracks_by_artist_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/scan_directory_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/search_tracks_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/pause_playback_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/play_track_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/resume_playback_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/seek_to_position_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/set_speed_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/playback/set_volume_use_case.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/library_page.dart';
 
 void main() {
@@ -48,16 +57,36 @@ class MyApp extends StatelessWidget {
       permissionDataSource: permissionDataSource,
     );
 
-    return BlocProvider(
-      create: (context) => LibraryBloc(
-        getAllTracks: GetAllTracksUseCase(audioRepository),
-        getAllArtists: GetAllArtistsUseCase(audioRepository),
-        getAllAlbums: GetAllAlbumsUseCase(audioRepository),
-        getTracksByArtist: GetTracksByArtistUseCase(audioRepository),
-        getTracksByAlbum: GetTracksByAlbumUseCase(audioRepository),
-        scanDirectory: ScanDirectoryUseCase(audioRepository),
-        searchTracks: SearchTracksUseCase(audioRepository),
-      ),
+    final audioPlayerDataSource = AudioPlayerDataSource();
+    final playbackRepository = PlaybackRepositoryImpl(
+      audioPlayerDataSource: audioPlayerDataSource,
+    );
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => LibraryBloc(
+            getAllTracks: GetAllTracksUseCase(audioRepository),
+            getAllArtists: GetAllArtistsUseCase(audioRepository),
+            getAllAlbums: GetAllAlbumsUseCase(audioRepository),
+            getTracksByArtist: GetTracksByArtistUseCase(audioRepository),
+            getTracksByAlbum: GetTracksByAlbumUseCase(audioRepository),
+            scanDirectory: ScanDirectoryUseCase(audioRepository),
+            searchTracks: SearchTracksUseCase(audioRepository),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => PlaybackBloc(
+            playTrack: PlayTrackUseCase(playbackRepository),
+            pausePlayback: PausePlaybackUseCase(playbackRepository),
+            resumePlayback: ResumePlaybackUseCase(playbackRepository),
+            seekToPosition: SeekToPositionUseCase(playbackRepository),
+            setVolume: SetVolumeUseCase(playbackRepository),
+            setSpeed: SetSpeedUseCase(playbackRepository),
+            playbackRepository: playbackRepository,
+          ),
+        ),
+      ],
       child: const LibraryPage(),
     );
   }
