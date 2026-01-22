@@ -1,0 +1,40 @@
+targets:
+  $default:
+    builders:
+      slang_build_runner:
+        options:
+          base_locale: en
+          fallback_strategy: base_locale
+          input_directory: assets/i18n
+          input_file_pattern: .json
+          output_directory: lib/core/gen
+          output_file_name: strings.g.dart
+          locale_handling: true
+          flutter_integration: true
+          namespaces: false
+          translate_var: t
+          enum_name: AppLocale
+          translation_class_visibility: public
+          timestamp: true
+          string_interpolation: braces
+          obfuscation:
+            enabled: false
+            secret: abc
+          imports: []
+          format:
+            enabled: true
+            width: 150
+        generate_for:
+          exclude:
+            - lib/src/rust/**
+      flutter_gen:
+        options:
+          output: lib/core/gen
+          integrations:
+            flutter_svg: true
+            rive: true
+            lottie: true
+        generate_for:
+          exclude:
+            - lib/src/rust/**
+            - lib/core/gen/strings.g.dart
