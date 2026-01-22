@@ -1,5 +1,5 @@
 name: mmine
-description: "A new Flutter project."
+description: "A Flutter-based music player application focused on lossless audio format playback."
 publish_to: "none"
 
 version: 1.0.0+1
