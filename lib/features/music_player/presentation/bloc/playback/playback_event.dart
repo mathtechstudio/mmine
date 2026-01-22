@@ -2,7 +2,11 @@ part of 'playback_bloc.dart';
 
 @freezed
 sealed class PlaybackEvent with _$PlaybackEvent {
-  const factory PlaybackEvent.playRequested(AudioTrack track) = _PlayRequested;
+  const factory PlaybackEvent.playRequested(
+    AudioTrack track,
+    List<AudioTrack> queue,
+    int startIndex,
+  ) = _PlayRequested;
 
   const factory PlaybackEvent.pauseRequested() = _PauseRequested;
 
@@ -13,6 +17,11 @@ sealed class PlaybackEvent with _$PlaybackEvent {
   const factory PlaybackEvent.volumeChanged(double volume) = _VolumeChanged;
 
   const factory PlaybackEvent.speedChanged(double speed) = _SpeedChanged;
+
+  const factory PlaybackEvent.skipToNextRequested() = _SkipToNextRequested;
+
+  const factory PlaybackEvent.skipToPreviousRequested() =
+      _SkipToPreviousRequested;
 
   const factory PlaybackEvent.playbackStateUpdated(
     PlaybackState playbackState,

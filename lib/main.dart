@@ -26,6 +26,9 @@ import 'package:mmine/features/music_player/domain/usecases/queue/clear_queue_us
 import 'package:mmine/features/music_player/domain/usecases/queue/play_next_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/remove_from_queue_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/queue/reorder_queue_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/set_queue_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_next_use_case.dart';
+import 'package:mmine/features/music_player/domain/usecases/queue/skip_to_previous_use_case.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/queue/queue_bloc.dart';
@@ -89,6 +92,9 @@ class MyApp extends StatelessWidget {
             seekToPosition: SeekToPositionUseCase(playbackRepository),
             setVolume: SetVolumeUseCase(playbackRepository),
             setSpeed: SetSpeedUseCase(playbackRepository),
+            setQueue: SetQueueUseCase(playbackRepository),
+            skipToNext: SkipToNextUseCase(playbackRepository),
+            skipToPrevious: SkipToPreviousUseCase(playbackRepository),
             playbackRepository: playbackRepository,
           ),
         ),

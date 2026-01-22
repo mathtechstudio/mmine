@@ -55,7 +55,7 @@ extension PlaybackEventPatterns on PlaybackEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _PlayRequested value)?  playRequested,TResult Function( _PauseRequested value)?  pauseRequested,TResult Function( _ResumeRequested value)?  resumeRequested,TResult Function( _SeekRequested value)?  seekRequested,TResult Function( _VolumeChanged value)?  volumeChanged,TResult Function( _SpeedChanged value)?  speedChanged,TResult Function( _PlaybackStateUpdated value)?  playbackStateUpdated,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _PlayRequested value)?  playRequested,TResult Function( _PauseRequested value)?  pauseRequested,TResult Function( _ResumeRequested value)?  resumeRequested,TResult Function( _SeekRequested value)?  seekRequested,TResult Function( _VolumeChanged value)?  volumeChanged,TResult Function( _SpeedChanged value)?  speedChanged,TResult Function( _SkipToNextRequested value)?  skipToNextRequested,TResult Function( _SkipToPreviousRequested value)?  skipToPreviousRequested,TResult Function( _PlaybackStateUpdated value)?  playbackStateUpdated,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _PlayRequested() when playRequested != null:
@@ -64,7 +64,9 @@ return pauseRequested(_that);case _ResumeRequested() when resumeRequested != nul
 return resumeRequested(_that);case _SeekRequested() when seekRequested != null:
 return seekRequested(_that);case _VolumeChanged() when volumeChanged != null:
 return volumeChanged(_that);case _SpeedChanged() when speedChanged != null:
-return speedChanged(_that);case _PlaybackStateUpdated() when playbackStateUpdated != null:
+return speedChanged(_that);case _SkipToNextRequested() when skipToNextRequested != null:
+return skipToNextRequested(_that);case _SkipToPreviousRequested() when skipToPreviousRequested != null:
+return skipToPreviousRequested(_that);case _PlaybackStateUpdated() when playbackStateUpdated != null:
 return playbackStateUpdated(_that);case _:
   return orElse();
 
@@ -83,7 +85,7 @@ return playbackStateUpdated(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _PlayRequested value)  playRequested,required TResult Function( _PauseRequested value)  pauseRequested,required TResult Function( _ResumeRequested value)  resumeRequested,required TResult Function( _SeekRequested value)  seekRequested,required TResult Function( _VolumeChanged value)  volumeChanged,required TResult Function( _SpeedChanged value)  speedChanged,required TResult Function( _PlaybackStateUpdated value)  playbackStateUpdated,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _PlayRequested value)  playRequested,required TResult Function( _PauseRequested value)  pauseRequested,required TResult Function( _ResumeRequested value)  resumeRequested,required TResult Function( _SeekRequested value)  seekRequested,required TResult Function( _VolumeChanged value)  volumeChanged,required TResult Function( _SpeedChanged value)  speedChanged,required TResult Function( _SkipToNextRequested value)  skipToNextRequested,required TResult Function( _SkipToPreviousRequested value)  skipToPreviousRequested,required TResult Function( _PlaybackStateUpdated value)  playbackStateUpdated,}){
 final _that = this;
 switch (_that) {
 case _PlayRequested():
@@ -92,7 +94,9 @@ return pauseRequested(_that);case _ResumeRequested():
 return resumeRequested(_that);case _SeekRequested():
 return seekRequested(_that);case _VolumeChanged():
 return volumeChanged(_that);case _SpeedChanged():
-return speedChanged(_that);case _PlaybackStateUpdated():
+return speedChanged(_that);case _SkipToNextRequested():
+return skipToNextRequested(_that);case _SkipToPreviousRequested():
+return skipToPreviousRequested(_that);case _PlaybackStateUpdated():
 return playbackStateUpdated(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -107,7 +111,7 @@ return playbackStateUpdated(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _PlayRequested value)?  playRequested,TResult? Function( _PauseRequested value)?  pauseRequested,TResult? Function( _ResumeRequested value)?  resumeRequested,TResult? Function( _SeekRequested value)?  seekRequested,TResult? Function( _VolumeChanged value)?  volumeChanged,TResult? Function( _SpeedChanged value)?  speedChanged,TResult? Function( _PlaybackStateUpdated value)?  playbackStateUpdated,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _PlayRequested value)?  playRequested,TResult? Function( _PauseRequested value)?  pauseRequested,TResult? Function( _ResumeRequested value)?  resumeRequested,TResult? Function( _SeekRequested value)?  seekRequested,TResult? Function( _VolumeChanged value)?  volumeChanged,TResult? Function( _SpeedChanged value)?  speedChanged,TResult? Function( _SkipToNextRequested value)?  skipToNextRequested,TResult? Function( _SkipToPreviousRequested value)?  skipToPreviousRequested,TResult? Function( _PlaybackStateUpdated value)?  playbackStateUpdated,}){
 final _that = this;
 switch (_that) {
 case _PlayRequested() when playRequested != null:
@@ -116,7 +120,9 @@ return pauseRequested(_that);case _ResumeRequested() when resumeRequested != nul
 return resumeRequested(_that);case _SeekRequested() when seekRequested != null:
 return seekRequested(_that);case _VolumeChanged() when volumeChanged != null:
 return volumeChanged(_that);case _SpeedChanged() when speedChanged != null:
-return speedChanged(_that);case _PlaybackStateUpdated() when playbackStateUpdated != null:
+return speedChanged(_that);case _SkipToNextRequested() when skipToNextRequested != null:
+return skipToNextRequested(_that);case _SkipToPreviousRequested() when skipToPreviousRequested != null:
+return skipToPreviousRequested(_that);case _PlaybackStateUpdated() when playbackStateUpdated != null:
 return playbackStateUpdated(_that);case _:
   return null;
 
@@ -134,15 +140,17 @@ return playbackStateUpdated(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( AudioTrack track)?  playRequested,TResult Function()?  pauseRequested,TResult Function()?  resumeRequested,TResult Function( Duration position)?  seekRequested,TResult Function( double volume)?  volumeChanged,TResult Function( double speed)?  speedChanged,TResult Function( PlaybackState playbackState)?  playbackStateUpdated,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( AudioTrack track,  List<AudioTrack> queue,  int startIndex)?  playRequested,TResult Function()?  pauseRequested,TResult Function()?  resumeRequested,TResult Function( Duration position)?  seekRequested,TResult Function( double volume)?  volumeChanged,TResult Function( double speed)?  speedChanged,TResult Function()?  skipToNextRequested,TResult Function()?  skipToPreviousRequested,TResult Function( PlaybackState playbackState)?  playbackStateUpdated,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlayRequested() when playRequested != null:
-return playRequested(_that.track);case _PauseRequested() when pauseRequested != null:
+return playRequested(_that.track,_that.queue,_that.startIndex);case _PauseRequested() when pauseRequested != null:
 return pauseRequested();case _ResumeRequested() when resumeRequested != null:
 return resumeRequested();case _SeekRequested() when seekRequested != null:
 return seekRequested(_that.position);case _VolumeChanged() when volumeChanged != null:
 return volumeChanged(_that.volume);case _SpeedChanged() when speedChanged != null:
-return speedChanged(_that.speed);case _PlaybackStateUpdated() when playbackStateUpdated != null:
+return speedChanged(_that.speed);case _SkipToNextRequested() when skipToNextRequested != null:
+return skipToNextRequested();case _SkipToPreviousRequested() when skipToPreviousRequested != null:
+return skipToPreviousRequested();case _PlaybackStateUpdated() when playbackStateUpdated != null:
 return playbackStateUpdated(_that.playbackState);case _:
   return orElse();
 
@@ -161,15 +169,17 @@ return playbackStateUpdated(_that.playbackState);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( AudioTrack track)  playRequested,required TResult Function()  pauseRequested,required TResult Function()  resumeRequested,required TResult Function( Duration position)  seekRequested,required TResult Function( double volume)  volumeChanged,required TResult Function( double speed)  speedChanged,required TResult Function( PlaybackState playbackState)  playbackStateUpdated,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( AudioTrack track,  List<AudioTrack> queue,  int startIndex)  playRequested,required TResult Function()  pauseRequested,required TResult Function()  resumeRequested,required TResult Function( Duration position)  seekRequested,required TResult Function( double volume)  volumeChanged,required TResult Function( double speed)  speedChanged,required TResult Function()  skipToNextRequested,required TResult Function()  skipToPreviousRequested,required TResult Function( PlaybackState playbackState)  playbackStateUpdated,}) {final _that = this;
 switch (_that) {
 case _PlayRequested():
-return playRequested(_that.track);case _PauseRequested():
+return playRequested(_that.track,_that.queue,_that.startIndex);case _PauseRequested():
 return pauseRequested();case _ResumeRequested():
 return resumeRequested();case _SeekRequested():
 return seekRequested(_that.position);case _VolumeChanged():
 return volumeChanged(_that.volume);case _SpeedChanged():
-return speedChanged(_that.speed);case _PlaybackStateUpdated():
+return speedChanged(_that.speed);case _SkipToNextRequested():
+return skipToNextRequested();case _SkipToPreviousRequested():
+return skipToPreviousRequested();case _PlaybackStateUpdated():
 return playbackStateUpdated(_that.playbackState);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -184,15 +194,17 @@ return playbackStateUpdated(_that.playbackState);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( AudioTrack track)?  playRequested,TResult? Function()?  pauseRequested,TResult? Function()?  resumeRequested,TResult? Function( Duration position)?  seekRequested,TResult? Function( double volume)?  volumeChanged,TResult? Function( double speed)?  speedChanged,TResult? Function( PlaybackState playbackState)?  playbackStateUpdated,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( AudioTrack track,  List<AudioTrack> queue,  int startIndex)?  playRequested,TResult? Function()?  pauseRequested,TResult? Function()?  resumeRequested,TResult? Function( Duration position)?  seekRequested,TResult? Function( double volume)?  volumeChanged,TResult? Function( double speed)?  speedChanged,TResult? Function()?  skipToNextRequested,TResult? Function()?  skipToPreviousRequested,TResult? Function( PlaybackState playbackState)?  playbackStateUpdated,}) {final _that = this;
 switch (_that) {
 case _PlayRequested() when playRequested != null:
-return playRequested(_that.track);case _PauseRequested() when pauseRequested != null:
+return playRequested(_that.track,_that.queue,_that.startIndex);case _PauseRequested() when pauseRequested != null:
 return pauseRequested();case _ResumeRequested() when resumeRequested != null:
 return resumeRequested();case _SeekRequested() when seekRequested != null:
 return seekRequested(_that.position);case _VolumeChanged() when volumeChanged != null:
 return volumeChanged(_that.volume);case _SpeedChanged() when speedChanged != null:
-return speedChanged(_that.speed);case _PlaybackStateUpdated() when playbackStateUpdated != null:
+return speedChanged(_that.speed);case _SkipToNextRequested() when skipToNextRequested != null:
+return skipToNextRequested();case _SkipToPreviousRequested() when skipToPreviousRequested != null:
+return skipToPreviousRequested();case _PlaybackStateUpdated() when playbackStateUpdated != null:
 return playbackStateUpdated(_that.playbackState);case _:
   return null;
 
@@ -205,10 +217,18 @@ return playbackStateUpdated(_that.playbackState);case _:
 
 
 class _PlayRequested implements PlaybackEvent {
-  const _PlayRequested(this.track);
+  const _PlayRequested(this.track, final  List<AudioTrack> queue, this.startIndex): _queue = queue;
   
 
  final  AudioTrack track;
+ final  List<AudioTrack> _queue;
+ List<AudioTrack> get queue {
+  if (_queue is EqualUnmodifiableListView) return _queue;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_queue);
+}
+
+ final  int startIndex;
 
 /// Create a copy of PlaybackEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -220,16 +240,16 @@ _$PlayRequestedCopyWith<_PlayRequested> get copyWith => __$PlayRequestedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayRequested&&(identical(other.track, track) || other.track == track));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayRequested&&(identical(other.track, track) || other.track == track)&&const DeepCollectionEquality().equals(other._queue, _queue)&&(identical(other.startIndex, startIndex) || other.startIndex == startIndex));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,track);
+int get hashCode => Object.hash(runtimeType,track,const DeepCollectionEquality().hash(_queue),startIndex);
 
 @override
 String toString() {
-  return 'PlaybackEvent.playRequested(track: $track)';
+  return 'PlaybackEvent.playRequested(track: $track, queue: $queue, startIndex: $startIndex)';
 }
 
 
@@ -240,7 +260,7 @@ abstract mixin class _$PlayRequestedCopyWith<$Res> implements $PlaybackEventCopy
   factory _$PlayRequestedCopyWith(_PlayRequested value, $Res Function(_PlayRequested) _then) = __$PlayRequestedCopyWithImpl;
 @useResult
 $Res call({
- AudioTrack track
+ AudioTrack track, List<AudioTrack> queue, int startIndex
 });
 
 
@@ -257,10 +277,12 @@ class __$PlayRequestedCopyWithImpl<$Res>
 
 /// Create a copy of PlaybackEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? track = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? track = null,Object? queue = null,Object? startIndex = null,}) {
   return _then(_PlayRequested(
 null == track ? _self.track : track // ignore: cast_nullable_to_non_nullable
-as AudioTrack,
+as AudioTrack,null == queue ? _self._queue : queue // ignore: cast_nullable_to_non_nullable
+as List<AudioTrack>,null == startIndex ? _self.startIndex : startIndex // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -528,6 +550,70 @@ as double,
 
 
 }
+
+/// @nodoc
+
+
+class _SkipToNextRequested implements PlaybackEvent {
+  const _SkipToNextRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SkipToNextRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'PlaybackEvent.skipToNextRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class _SkipToPreviousRequested implements PlaybackEvent {
+  const _SkipToPreviousRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SkipToPreviousRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'PlaybackEvent.skipToPreviousRequested()';
+}
+
+
+}
+
+
+
 
 /// @nodoc
 
