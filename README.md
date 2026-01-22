@@ -1,16 +1,51 @@
-# mmine
+# mmine - Lossless Music Player
 
-A new Flutter project.
+A high-fidelity music player for Flutter that exclusively supports lossless audio formats (FLAC, WAV, ALAC).
+
+## Features
+
+- 🎵 Lossless audio support (FLAC, WAV, ALAC)
+- 🎧 Bit-perfect playback
+- 📚 Library management with metadata
+- 🎼 Playlist creation and management
+- ⏯️ Queue management
+- 🔁 Repeat and shuffle modes
+- 🎚️ Volume and speed controls
+- 📱 Background playback
+- 🔒 Lock screen controls
+
+## Architecture
+
+Built with Clean Architecture:
+- **Presentation Layer**: BLoC pattern for state management
+- **Domain Layer**: Business logic and use cases
+- **Data Layer**: Repositories and data sources
+
+## Tech Stack
+
+- Flutter & Dart
+- BLoC for state management
+- Drift for local database
+- just_audio for audio playback
+- Freezed for immutable models
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+```bash
+# Get dependencies
+flutter pub get
 
-A few resources to get you started if this is your first Flutter project:
+# Generate code
+dart run build_runner build --delete-conflicting-outputs
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Run the app
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Development
+
+See [AGENTS.md](AGENTS.md) for development guidelines and workflow.
+
+## License
+
+This project is licensed under the MIT License.
