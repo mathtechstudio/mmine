@@ -217,6 +217,119 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
   }
 
   @override
+  Future<Either<Failure, void>> addToQueue(List<AudioTrack> tracks) async {
+    try {
+      if (tracks.isEmpty) {
+        return Left(PlaybackFailure('Cannot add empty list to queue'));
+      }
+      final updatedQueue = List<AudioTrack>.from(_currentState.queue)
+        ..addAll(tracks);
+      _updateState(_currentState.copyWith(queue: updatedQueue));
+      return const Right(null);
+    } catch (e) {
+      return Left(PlaybackFailure('Failed to add to queue: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> playNext(List<AudioTrack> tracks) async {
+    try {
+      if (tracks.isEmpty) {
+        return Left(PlaybackFailure('Cannot add empty list to play next'));
+      }
+      final updatedQueue = List<AudioTrack>.from(_currentState.queue);
+      final insertIndex = _currentState.currentIndex + 1;
+      updatedQueue.insertAll(insertIndex, tracks);
+      _updateState(_currentState.copyWith(queue: updatedQueue));
+      return const Right(null);
+    } catch (e) {
+      return Left(PlaybackFailure('Failed to play next: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeFromQueue(int index) async {
+    try {
+      if (index < 0 || index >= _currentState.queue.length) {
+        return Left(PlaybackFailure('Invalid queue index'));
+      }
+      if (index == _currentState.currentIndex) {
+        return Left(PlaybackFailure('Cannot remove currently playing track'));
+      }
+      final updatedQueue = List<AudioTrack>.from(_currentState.queue)
+        ..removeAt(index);
+      var newCurrentIndex = _currentState.currentIndex;
+      if (index < _currentState.currentIndex) {
+        newCurrentIndex--;
+      }
+      _updateState(
+        _currentState.copyWith(
+          queue: updatedQueue,
+          currentIndex: newCurrentIndex,
+        ),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(
+        PlaybackFailure('Failed to remove from queue: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> reorderQueue(int oldIndex, int newIndex) async {
+    try {
+      if (oldIndex < 0 || oldIndex >= _currentState.queue.length) {
+        return Left(PlaybackFailure('Invalid old index'));
+      }
+      if (newIndex < 0 || newIndex >= _currentState.queue.length) {
+        return Left(PlaybackFailure('Invalid new index'));
+      }
+      if (oldIndex == _currentState.currentIndex ||
+          newIndex == _currentState.currentIndex) {
+        return Left(PlaybackFailure('Cannot reorder currently playing track'));
+      }
+      final updatedQueue = List<AudioTrack>.from(_currentState.queue);
+      final track = updatedQueue.removeAt(oldIndex);
+      updatedQueue.insert(newIndex, track);
+      var newCurrentIndex = _currentState.currentIndex;
+      if (oldIndex < _currentState.currentIndex &&
+          newIndex >= _currentState.currentIndex) {
+        newCurrentIndex--;
+      } else if (oldIndex > _currentState.currentIndex &&
+          newIndex <= _currentState.currentIndex) {
+        newCurrentIndex++;
+      }
+      _updateState(
+        _currentState.copyWith(
+          queue: updatedQueue,
+          currentIndex: newCurrentIndex,
+        ),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(PlaybackFailure('Failed to reorder queue: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> clearQueue() async {
+    try {
+      await stop();
+      _updateState(
+        _currentState.copyWith(
+          queue: const [],
+          currentIndex: 0,
+          currentTrack: null,
+        ),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(PlaybackFailure('Failed to clear queue: ${e.toString()}'));
+    }
+  }
+
+  @override
   Stream<PlaybackState> get playbackStateStream => _stateController.stream;
 
   Future<void> dispose() async {

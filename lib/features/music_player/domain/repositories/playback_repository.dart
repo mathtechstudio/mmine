@@ -19,5 +19,10 @@ abstract class PlaybackRepository {
     List<AudioTrack> tracks,
     int startIndex,
   );
+  Future<Either<Failure, void>> addToQueue(List<AudioTrack> tracks);
+  Future<Either<Failure, void>> playNext(List<AudioTrack> tracks);
+  Future<Either<Failure, void>> removeFromQueue(int index);
+  Future<Either<Failure, void>> reorderQueue(int oldIndex, int newIndex);
+  Future<Either<Failure, void>> clearQueue();
   Stream<PlaybackState> get playbackStateStream;
 }
