@@ -9,6 +9,7 @@ import 'package:mmine/features/music_player/presentation/pages/queue_page.dart';
 import 'package:mmine/features/music_player/presentation/widgets/audio_quality_badge.dart';
 import 'package:mmine/features/music_player/presentation/widgets/playback_controls.dart';
 import 'package:mmine/features/music_player/presentation/widgets/progress_slider.dart';
+import 'package:mmine/features/music_player/presentation/widgets/volume_slider.dart';
 
 class NowPlayingPage extends StatelessWidget {
   const NowPlayingPage();
@@ -96,6 +97,15 @@ class NowPlayingPage extends StatelessWidget {
                   onNext: () {
                     context.read<PlaybackBloc>().add(
                       const PlaybackEvent.skipToNextRequested(),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                VolumeSlider(
+                  volume: playbackState.volume,
+                  onChanged: (volume) {
+                    context.read<PlaybackBloc>().add(
+                      PlaybackEvent.volumeChanged(volume),
                     );
                   },
                 ),

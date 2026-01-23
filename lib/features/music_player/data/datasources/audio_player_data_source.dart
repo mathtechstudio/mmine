@@ -44,11 +44,36 @@ class AudioPlayerDataSource {
     await _player.setSpeed(speed.clamp(0.5, 2.0));
   }
 
+  Future<void> setPlaylist(List<String> filePaths, int startIndex) async {
+    final audioSources = filePaths
+        .map((path) => AudioSource.file(path))
+        .toList();
+    // ignore: deprecated_member_use
+    await _player.setAudioSource(
+      ConcatenatingAudioSource(children: audioSources),
+      initialIndex: startIndex,
+    );
+  }
+
+  Future<void> skipToNext() async {
+    if (_player.hasNext) {
+      await _player.seekToNext();
+    }
+  }
+
+  Future<void> skipToPrevious() async {
+    if (_player.hasPrevious) {
+      await _player.seekToPrevious();
+    }
+  }
+
   Stream<Duration> get positionStream => _player.positionStream;
 
   Stream<Duration?> get durationStream => _player.durationStream;
 
   Stream<bool> get playingStream => _player.playingStream;
+
+  Stream<int?> get currentIndexStream => _player.currentIndexStream;
 
   bool get isPlaying => _player.playing;
 
@@ -56,9 +81,15 @@ class AudioPlayerDataSource {
 
   Duration? get duration => _player.duration;
 
+  int? get currentIndex => _player.currentIndex;
+
   double get volume => _player.volume;
 
   double get speed => _player.speed;
+
+  bool get hasNext => _player.hasNext;
+
+  bool get hasPrevious => _player.hasPrevious;
 
   Future<void> dispose() async {
     await _player.dispose();

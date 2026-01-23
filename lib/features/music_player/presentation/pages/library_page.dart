@@ -7,6 +7,7 @@ import 'package:mmine/features/music_player/presentation/bloc/library/library_bl
 import 'package:mmine/features/music_player/presentation/pages/albums_tab.dart';
 import 'package:mmine/features/music_player/presentation/pages/artists_tab.dart';
 import 'package:mmine/features/music_player/presentation/pages/playlist_page.dart';
+import 'package:mmine/features/music_player/presentation/pages/settings_page.dart';
 import 'package:mmine/features/music_player/presentation/pages/songs_tab.dart';
 import 'package:mmine/features/music_player/presentation/widgets/now_playing_bar.dart';
 
@@ -84,6 +85,20 @@ class _LibraryPageState extends State<LibraryPage>
             tooltip: 'Scan directory',
             onPressed: () {
               _showScanDialog();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const SettingsPage(),
+                  ),
+                ),
+              );
             },
           ),
         ],
