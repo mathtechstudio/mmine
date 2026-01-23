@@ -138,11 +138,21 @@ class NowPlayingPage extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: track.albumArtPath != null
-                ? Image.asset(
-                    track.albumArtPath!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildPlaceholderArt(),
+                ? TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeIn,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Image.asset(
+                          track.albumArtPath!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildPlaceholderArt(),
+                        ),
+                      );
+                    },
                   )
                 : _buildPlaceholderArt(),
           ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/core/utils/animations.dart';
+import 'package:mmine/core/utils/error_handler.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
+import 'package:mmine/features/music_player/presentation/widgets/skeleton_track_tile.dart';
 import 'package:mmine/features/music_player/presentation/widgets/track_list_tile.dart';
 
 class SongsTab extends StatefulWidget {
@@ -20,11 +23,26 @@ class _SongsTabState extends State<SongsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LibraryBloc, LibraryState>(
+    return BlocConsumer<LibraryBloc, LibraryState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          error: (message) {
+            ErrorHandler.showErrorSnackBar(
+              context,
+              ErrorHandler.getUserFriendlyMessage(message),
+              onRetry: () {
+                context.read<LibraryBloc>().add(
+                  const LibraryEvent.loadTracksRequested(),
+                );
+              },
+            );
+          },
+        );
+      },
       builder: (context, state) {
         return state.when(
           initial: () => _buildEmpty(),
-          loading: () => _buildLoading(),
+          loading: () => _buildLoadingSkeleton(),
           scanning: (path) => _buildScanning(path),
           tracksLoaded: (tracks, activeFilter) => _buildTracksList(tracks),
           artistsLoaded: (_) => _buildEmpty(),
@@ -52,22 +70,28 @@ class _SongsTabState extends State<SongsTab> {
         itemCount: tracks.length,
         itemBuilder: (context, index) {
           final track = tracks[index];
-          return TrackListTile(
-            track: track,
-            onTap: () {
-              // TODO: Play track
-            },
-            onLongPress: () {
-              // TODO: Show context menu
-            },
+          return AppAnimations.animatedListItem(
+            index: index,
+            child: TrackListTile(
+              track: track,
+              onTap: () {
+                // TODO: Play track
+              },
+              onLongPress: () {
+                // TODO: Show context menu
+              },
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildLoading() {
-    return const Center(child: CircularProgressIndicator());
+  Widget _buildLoadingSkeleton() {
+    return ListView.builder(
+      itemCount: 10,
+      itemBuilder: (context, index) => const SkeletonTrackTile(),
+    );
   }
 
   Widget _buildEmpty() {

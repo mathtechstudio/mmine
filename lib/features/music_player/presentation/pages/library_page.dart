@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/core/utils/animations.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/albums_tab.dart';
@@ -94,9 +95,7 @@ class _LibraryPageState extends State<LibraryPage>
               unawaited(
                 Navigator.push(
                   context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const SettingsPage(),
-                  ),
+                  AppAnimations.createSlideRoute(const SettingsPage()),
                 ),
               );
             },
