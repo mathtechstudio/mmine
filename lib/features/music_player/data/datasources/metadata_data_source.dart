@@ -12,10 +12,23 @@ class MetadataDataSource {
 
   Future<Map<String, dynamic>> extractMetadata(String filePath) async {
     try {
+      // Use isolate for heavy metadata extraction to avoid blocking UI
+      final result = await compute(_extractMetadataInIsolate, filePath);
+      return result;
+    } catch (e) {
+      debugPrint('Error extracting metadata from $filePath: $e');
+      return _getDefaultMetadata(filePath);
+    }
+  }
+
+  static Future<Map<String, dynamic>> _extractMetadataInIsolate(
+    String filePath,
+  ) async {
+    try {
       final metadata = await MetadataRetriever.fromFile(File(filePath));
 
       return {
-        'title': metadata.trackName ?? _getFileNameWithoutExtension(filePath),
+        'title': metadata.trackName ?? p.basenameWithoutExtension(filePath),
         'artist': metadata.trackArtistNames?.isNotEmpty == true
             ? metadata.trackArtistNames!.first
             : 'Unknown Artist',
@@ -30,16 +43,23 @@ class MetadataDataSource {
         'albumArt': metadata.albumArt,
       };
     } catch (e) {
-      debugPrint('Error extracting metadata from $filePath: $e');
-      return _getDefaultMetadata(filePath);
+      return {
+        'title': p.basenameWithoutExtension(filePath),
+        'artist': 'Unknown Artist',
+        'album': 'Unknown Album',
+        'albumArtist': null,
+        'year': null,
+        'genre': null,
+        'trackNumber': null,
+        'duration': Duration.zero,
+        'bitDepth': 16,
+        'sampleRate': 44100,
+        'albumArt': null,
+      };
     }
   }
 
-  String _getFileNameWithoutExtension(String filePath) {
-    return p.basenameWithoutExtension(filePath);
-  }
-
-  int _extractBitDepth(String filePath, Metadata metadata) {
+  static int _extractBitDepth(String filePath, Metadata metadata) {
     // Try to get bit depth from metadata
     // Default to 16-bit for WAV/FLAC, 16-bit for ALAC
     final extension = p.extension(filePath).toLowerCase();
@@ -59,7 +79,7 @@ class MetadataDataSource {
     return 16; // Default fallback
   }
 
-  int _extractSampleRate(Metadata metadata) {
+  static int _extractSampleRate(Metadata metadata) {
     // Try to extract sample rate from metadata
     // Default to 44.1kHz if not available
     // This would need proper implementation based on the metadata structure
@@ -68,7 +88,7 @@ class MetadataDataSource {
 
   Map<String, dynamic> _getDefaultMetadata(String filePath) {
     return {
-      'title': _getFileNameWithoutExtension(filePath),
+      'title': p.basenameWithoutExtension(filePath),
       'artist': 'Unknown Artist',
       'album': 'Unknown Album',
       'albumArtist': null,

@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:mmine/features/music_player/data/datasources/audio_service_handler.dart';
 
 class AudioPlayerDataSource {
   final AudioPlayer _player;
+  AudioServiceHandler? _audioServiceHandler;
 
   AudioPlayerDataSource() : _player = AudioPlayer() {
     unawaited(_configureAudioSession());
@@ -13,6 +16,23 @@ class AudioPlayerDataSource {
     // Configure audio session for high-quality playback
     await _player.setVolume(1.0);
     await _player.setSpeed(1.0);
+
+    // Initialize audio service for media notifications
+    try {
+      _audioServiceHandler = await AudioService.init(
+        builder: () => AudioServiceHandler(_player),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.example.mmine.audio',
+          androidNotificationChannelName: 'Mmine Audio Playback',
+          androidNotificationOngoing: true,
+          androidShowNotificationBadge: true,
+          androidStopForegroundOnPause: true,
+        ),
+      );
+    } catch (e) {
+      // Audio service initialization failed, continue without it
+      // This can happen on platforms that don't support audio service
+    }
   }
 
   Future<void> play(String filePath) async {
@@ -54,6 +74,8 @@ class AudioPlayerDataSource {
       initialIndex: startIndex,
     );
   }
+
+  AudioServiceHandler? get audioServiceHandler => _audioServiceHandler;
 
   Future<void> skipToNext() async {
     if (_player.hasNext) {

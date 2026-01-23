@@ -230,6 +230,13 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       }
       final startTrack = tracks[startIndex];
       await audioPlayerDataSource.play(startTrack.filePath);
+
+      // Update audio service notification
+      final audioServiceHandler = audioPlayerDataSource.audioServiceHandler;
+      if (audioServiceHandler != null) {
+        await audioServiceHandler.updateQueueWithTracks(tracks, startIndex);
+      }
+
       _updateState(
         _currentState.copyWith(
           queue: tracks,

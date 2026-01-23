@@ -8,6 +8,7 @@ environment:
   sdk: '>=3.8.1 <4.0.0'
 
 dependencies:
+  audio_service: 0.18.18
   audio_session: 0.2.2
   bloc: 9.2.0
   bloc_concurrency: 0.3.0
