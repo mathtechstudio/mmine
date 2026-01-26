@@ -17,6 +17,7 @@ class AlbumsTab extends StatefulWidget {
 
 class _AlbumsTabState extends State<AlbumsTab> {
   Map<String, int> _albumTrackCounts = {};
+  Map<String, String> _albumArtists = {};
   List<String> _albums = [];
 
   @override
@@ -33,10 +34,17 @@ class _AlbumsTabState extends State<AlbumsTab> {
 
   void _updateTrackCounts(List<dynamic> tracks) {
     final counts = <String, int>{};
+    final artists = <String, String>{};
+
     for (final track in tracks) {
       if (track is AudioTrack) {
         final album = track.album;
         counts[album] = (counts[album] ?? 0) + 1;
+
+        // Store the first artist found for this album
+        if (!artists.containsKey(album)) {
+          artists[album] = track.artist;
+        }
       }
     }
 
@@ -45,6 +53,7 @@ class _AlbumsTabState extends State<AlbumsTab> {
       if (mounted) {
         setState(() {
           _albumTrackCounts = counts;
+          _albumArtists = artists;
         });
       }
     });
@@ -130,9 +139,10 @@ class _AlbumsTabState extends State<AlbumsTab> {
         itemBuilder: (context, index) {
           final album = albums[index];
           final trackCount = _albumTrackCounts[album] ?? 0;
+          final artist = _albumArtists[album] ?? 'Unknown Artist';
           return AlbumCard(
             album: album,
-            artist: 'Unknown Artist',
+            artist: artist,
             trackCount: trackCount,
             onTap: () {
               final libraryBloc = context.read<LibraryBloc>();
