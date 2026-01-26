@@ -76,6 +76,16 @@ class AudioTrack extends Equatable {
     dateAdded,
   ];
 
+  /// Determines if this track qualifies as Hi-Res audio.
+  ///
+  /// Hi-Res audio is defined as:
+  /// - Bit depth ≥ 24-bit, OR
+  /// - Sample rate ≥ 48 kHz
+  ///
+  /// This follows the industry standard definition where audio exceeding
+  /// CD quality (16-bit / 44.1 kHz) is considered Hi-Res.
+  bool get isHiRes => bitDepth >= 24 || sampleRate >= 48000;
+
   /// Creates a copy of this [AudioTrack] with the given fields replaced
   /// with new values.
   ///

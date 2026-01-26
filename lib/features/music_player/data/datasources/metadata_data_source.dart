@@ -85,12 +85,13 @@ class MetadataDataSource {
   ///
   /// Attempts to determine the bit depth based on file extension and metadata.
   /// For FLAC files, reads the STREAMINFO block to get actual bit depth.
+  /// For WAV files, reads the fmt chunk to get actual bit depth.
+  /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
     debugPrint('Extracting bit depth for: $filePath (extension: $extension)');
 
-    // For FLAC files, try to read from STREAMINFO block
     if (extension == '.flac') {
       try {
         final bitDepth = _readFlacBitDepth(filePath);
@@ -103,11 +104,33 @@ class MetadataDataSource {
         debugPrint('Error reading FLAC bit depth: $e');
       }
       debugPrint('Using default FLAC bit depth: 24');
-      return 24; // Default assumption for FLAC
+      return 24;
     } else if (extension == '.wav') {
-      return 16; // Default assumption for WAV
+      try {
+        final bitDepth = _readWavBitDepth(filePath);
+        debugPrint('WAV bit depth read result: $bitDepth');
+        if (bitDepth != null) {
+          debugPrint('Using WAV bit depth: $bitDepth');
+          return bitDepth;
+        }
+      } catch (e) {
+        debugPrint('Error reading WAV bit depth: $e');
+      }
+      debugPrint('Using default WAV bit depth: 16');
+      return 16;
     } else if (extension == '.m4a') {
-      return 16; // Default assumption for ALAC
+      try {
+        final bitDepth = _readAlacBitDepth(filePath);
+        debugPrint('ALAC bit depth read result: $bitDepth');
+        if (bitDepth != null) {
+          debugPrint('Using ALAC bit depth: $bitDepth');
+          return bitDepth;
+        }
+      } catch (e) {
+        debugPrint('Error reading ALAC bit depth: $e');
+      }
+      debugPrint('Using default ALAC bit depth: 16');
+      return 16;
     }
 
     return 16; // Default fallback
@@ -116,12 +139,13 @@ class MetadataDataSource {
   /// Extracts sample rate from metadata.
   ///
   /// For FLAC files, reads the STREAMINFO block to get actual sample rate.
+  /// For WAV files, reads the fmt chunk to get actual sample rate.
+  /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
     debugPrint('Extracting sample rate for: $filePath (extension: $extension)');
 
-    // For FLAC files, try to read from STREAMINFO block
     if (extension == '.flac') {
       try {
         final sampleRate = _readFlacSampleRate(filePath);
@@ -132,6 +156,28 @@ class MetadataDataSource {
         }
       } catch (e) {
         debugPrint('Error reading FLAC sample rate: $e');
+      }
+    } else if (extension == '.wav') {
+      try {
+        final sampleRate = _readWavSampleRate(filePath);
+        debugPrint('WAV sample rate read result: $sampleRate');
+        if (sampleRate != null) {
+          debugPrint('Using WAV sample rate: $sampleRate Hz');
+          return sampleRate;
+        }
+      } catch (e) {
+        debugPrint('Error reading WAV sample rate: $e');
+      }
+    } else if (extension == '.m4a') {
+      try {
+        final sampleRate = _readAlacSampleRate(filePath);
+        debugPrint('ALAC sample rate read result: $sampleRate');
+        if (sampleRate != null) {
+          debugPrint('Using ALAC sample rate: $sampleRate Hz');
+          return sampleRate;
+        }
+      } catch (e) {
+        debugPrint('Error reading ALAC sample rate: $e');
       }
     }
 
@@ -253,6 +299,186 @@ class MetadataDataSource {
       return sampleRate;
     } catch (e) {
       debugPrint('Error reading FLAC sample rate: $e');
+      return null;
+    }
+  }
+
+  /// Reads bit depth from WAV fmt chunk.
+  ///
+  /// WAV files have a RIFF header followed by fmt chunk.
+  /// Bit depth is stored at offset 34 (2 bytes, little-endian).
+  int? _readWavBitDepth(String filePath) {
+    try {
+      debugPrint('Reading WAV bit depth from: $filePath');
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
+      final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
+
+      // Check RIFF signature
+      if (bytes.length < 44) {
+        debugPrint('File too small for WAV: ${bytes.length} bytes');
+        return null;
+      }
+
+      final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
+      final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
+      debugPrint(
+        'File signature: $riffSignature / $waveSignature (expected: RIFF / WAVE)',
+      );
+
+      if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
+        debugPrint('Invalid WAV signature');
+        return null;
+      }
+
+      // Bit depth is at offset 34 (2 bytes, little-endian)
+      final bitDepth = bytes[34] | (bytes[35] << 8);
+
+      debugPrint('Calculated bit depth: $bitDepth');
+
+      return bitDepth;
+    } catch (e) {
+      debugPrint('Error reading WAV bit depth: $e');
+      return null;
+    }
+  }
+
+  /// Reads sample rate from WAV fmt chunk.
+  ///
+  /// WAV files have a RIFF header followed by fmt chunk.
+  /// Sample rate is stored at offset 24 (4 bytes, little-endian).
+  int? _readWavSampleRate(String filePath) {
+    try {
+      debugPrint('Reading WAV sample rate from: $filePath');
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
+      final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
+
+      // Check RIFF signature
+      if (bytes.length < 44) {
+        debugPrint('File too small for WAV: ${bytes.length} bytes');
+        return null;
+      }
+
+      final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
+      final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
+      debugPrint(
+        'File signature: $riffSignature / $waveSignature (expected: RIFF / WAVE)',
+      );
+
+      if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
+        debugPrint('Invalid WAV signature');
+        return null;
+      }
+
+      // Sample rate is at offset 24 (4 bytes, little-endian)
+      final sampleRate =
+          bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24);
+
+      debugPrint('Calculated sample rate: $sampleRate Hz');
+
+      return sampleRate;
+    } catch (e) {
+      debugPrint('Error reading WAV sample rate: $e');
+      return null;
+    }
+  }
+
+  /// Reads bit depth from ALAC (M4A) file.
+  ///
+  /// ALAC files use MP4 container with alac atom.
+  /// This is a simplified parser that looks for the alac atom.
+  int? _readAlacBitDepth(String filePath) {
+    try {
+      debugPrint('Reading ALAC bit depth from: $filePath');
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
+      final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
+
+      // Look for 'alac' atom in the file
+      // This is a simplified search - proper MP4 parsing would be more complex
+      for (int i = 0; i < bytes.length - 36; i++) {
+        if (bytes[i] == 0x61 &&
+            bytes[i + 1] == 0x6C &&
+            bytes[i + 2] == 0x61 &&
+            bytes[i + 3] == 0x63) {
+          // Found 'alac' atom
+          // Bit depth is at offset +25 from 'alac' (1 byte)
+          if (i + 25 < bytes.length) {
+            final bitDepth = bytes[i + 25];
+            debugPrint('Found ALAC atom, bit depth: $bitDepth');
+            return bitDepth;
+          }
+        }
+      }
+
+      debugPrint('ALAC atom not found');
+      return null;
+    } catch (e) {
+      debugPrint('Error reading ALAC bit depth: $e');
+      return null;
+    }
+  }
+
+  /// Reads sample rate from ALAC (M4A) file.
+  ///
+  /// ALAC files use MP4 container with alac atom.
+  /// This is a simplified parser that looks for the alac atom.
+  int? _readAlacSampleRate(String filePath) {
+    try {
+      debugPrint('Reading ALAC sample rate from: $filePath');
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
+      final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
+
+      // Look for 'alac' atom in the file
+      for (int i = 0; i < bytes.length - 36; i++) {
+        if (bytes[i] == 0x61 &&
+            bytes[i + 1] == 0x6C &&
+            bytes[i + 2] == 0x61 &&
+            bytes[i + 3] == 0x63) {
+          // Found 'alac' atom
+          // Sample rate is at offset +32 from 'alac' (4 bytes, big-endian)
+          if (i + 35 < bytes.length) {
+            final sampleRate =
+                (bytes[i + 32] << 24) |
+                (bytes[i + 33] << 16) |
+                (bytes[i + 34] << 8) |
+                bytes[i + 35];
+            debugPrint('Found ALAC atom, sample rate: $sampleRate Hz');
+            return sampleRate;
+          }
+        }
+      }
+
+      debugPrint('ALAC atom not found');
+      return null;
+    } catch (e) {
+      debugPrint('Error reading ALAC sample rate: $e');
       return null;
     }
   }

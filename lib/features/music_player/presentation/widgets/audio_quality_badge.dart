@@ -19,7 +19,7 @@ class AudioQualityBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.high_quality,
+            track.isHiRes ? Icons.hd : Icons.high_quality,
             size: 16,
             color: _getFormatColor(track.format),
           ),
@@ -32,6 +32,24 @@ class AudioQualityBadge extends StatelessWidget {
               color: _getFormatColor(track.format),
             ),
           ),
+          if (track.isHiRes) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Hi-Res',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
