@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
@@ -37,11 +38,15 @@ class _AlbumsTabState extends State<AlbumsTab> {
         counts[album] = (counts[album] ?? 0) + 1;
       }
     }
-    if (mounted) {
-      setState(() {
-        _albumTrackCounts = counts;
-      });
-    }
+
+    // Schedule setState to run after build completes
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          _albumTrackCounts = counts;
+        });
+      }
+    });
   }
 
   @override
