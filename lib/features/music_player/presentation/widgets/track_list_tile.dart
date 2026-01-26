@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 
@@ -51,8 +53,8 @@ class TrackListTile extends StatelessWidget {
     if (track.albumArtPath != null) {
       artWidget = ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: Image.asset(
-          track.albumArtPath!,
+        child: Image.file(
+          File(track.albumArtPath!),
           width: 48,
           height: 48,
           fit: BoxFit.cover,
