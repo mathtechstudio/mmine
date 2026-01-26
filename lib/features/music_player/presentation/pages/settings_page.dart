@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mmine/features/music_player/presentation/widgets/settings_switch_tile.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -12,11 +13,15 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String _version = '';
+  bool _gaplessPlayback = true;
+  bool _autoScanOnStartup = false;
+  bool _showAlbumArt = true;
 
   @override
   void initState() {
     super.initState();
     unawaited(_loadVersion());
+    unawaited(_loadSettings());
   }
 
   Future<void> _loadVersion() async {
@@ -24,6 +29,11 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _version = '${packageInfo.version} (${packageInfo.buildNumber})';
     });
+  }
+
+  Future<void> _loadSettings() async {
+    // TODO: Load settings from persistent storage
+    // For now, using default values
   }
 
   @override
@@ -35,12 +45,15 @@ class _SettingsPageState extends State<SettingsPage> {
           _buildSection(
             title: 'Audio Settings',
             children: [
-              SwitchListTile(
-                title: const Text('Gapless Playback'),
-                subtitle: const Text('Seamless transition between tracks'),
-                value: true,
+              SettingsSwitchTile(
+                title: 'Gapless Playback',
+                subtitle: 'Seamless transition between tracks',
+                value: _gaplessPlayback,
                 onChanged: (value) {
-                  // TODO: Implement gapless playback toggle
+                  setState(() {
+                    _gaplessPlayback = value;
+                  });
+                  // TODO: Save to persistent storage
                 },
               ),
               ListTile(
@@ -72,12 +85,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   // TODO: Trigger library scan
                 },
               ),
-              SwitchListTile(
-                title: const Text('Auto-scan on Startup'),
-                subtitle: const Text('Automatically scan for new music'),
-                value: false,
+              SettingsSwitchTile(
+                title: 'Auto-scan on Startup',
+                subtitle: 'Automatically scan for new music',
+                value: _autoScanOnStartup,
                 onChanged: (value) {
-                  // TODO: Implement auto-scan toggle
+                  setState(() {
+                    _autoScanOnStartup = value;
+                  });
+                  // TODO: Save to persistent storage
                 },
               ),
             ],
@@ -93,12 +109,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   // TODO: Show theme picker
                 },
               ),
-              SwitchListTile(
-                title: const Text('Show Album Art'),
-                subtitle: const Text('Display album artwork in lists'),
-                value: true,
+              SettingsSwitchTile(
+                title: 'Show Album Art',
+                subtitle: 'Display album artwork in lists',
+                value: _showAlbumArt,
                 onChanged: (value) {
-                  // TODO: Implement album art toggle
+                  setState(() {
+                    _showAlbumArt = value;
+                  });
+                  // TODO: Save to persistent storage
                 },
               ),
             ],
