@@ -55,14 +55,15 @@ extension LibraryEventPatterns on LibraryEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LoadTracksRequested value)?  loadTracksRequested,TResult Function( _LoadArtistsRequested value)?  loadArtistsRequested,TResult Function( _LoadAlbumsRequested value)?  loadAlbumsRequested,TResult Function( _ScanLibraryRequested value)?  scanLibraryRequested,TResult Function( _SearchQueryChanged value)?  searchQueryChanged,TResult Function( _FilterByFormatRequested value)?  filterByFormatRequested,TResult Function( _LoadTracksByArtistRequested value)?  loadTracksByArtistRequested,TResult Function( _LoadTracksByAlbumRequested value)?  loadTracksByAlbumRequested,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LoadTracksRequested value)?  loadTracksRequested,TResult Function( _LoadArtistsRequested value)?  loadArtistsRequested,TResult Function( _LoadAlbumsRequested value)?  loadAlbumsRequested,TResult Function( _ScanLibraryRequested value)?  scanLibraryRequested,TResult Function( _AddSingleFileRequested value)?  addSingleFileRequested,TResult Function( _SearchQueryChanged value)?  searchQueryChanged,TResult Function( _FilterByFormatRequested value)?  filterByFormatRequested,TResult Function( _LoadTracksByArtistRequested value)?  loadTracksByArtistRequested,TResult Function( _LoadTracksByAlbumRequested value)?  loadTracksByAlbumRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _LoadTracksRequested() when loadTracksRequested != null:
 return loadTracksRequested(_that);case _LoadArtistsRequested() when loadArtistsRequested != null:
 return loadArtistsRequested(_that);case _LoadAlbumsRequested() when loadAlbumsRequested != null:
 return loadAlbumsRequested(_that);case _ScanLibraryRequested() when scanLibraryRequested != null:
-return scanLibraryRequested(_that);case _SearchQueryChanged() when searchQueryChanged != null:
+return scanLibraryRequested(_that);case _AddSingleFileRequested() when addSingleFileRequested != null:
+return addSingleFileRequested(_that);case _SearchQueryChanged() when searchQueryChanged != null:
 return searchQueryChanged(_that);case _FilterByFormatRequested() when filterByFormatRequested != null:
 return filterByFormatRequested(_that);case _LoadTracksByArtistRequested() when loadTracksByArtistRequested != null:
 return loadTracksByArtistRequested(_that);case _LoadTracksByAlbumRequested() when loadTracksByAlbumRequested != null:
@@ -84,14 +85,15 @@ return loadTracksByAlbumRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LoadTracksRequested value)  loadTracksRequested,required TResult Function( _LoadArtistsRequested value)  loadArtistsRequested,required TResult Function( _LoadAlbumsRequested value)  loadAlbumsRequested,required TResult Function( _ScanLibraryRequested value)  scanLibraryRequested,required TResult Function( _SearchQueryChanged value)  searchQueryChanged,required TResult Function( _FilterByFormatRequested value)  filterByFormatRequested,required TResult Function( _LoadTracksByArtistRequested value)  loadTracksByArtistRequested,required TResult Function( _LoadTracksByAlbumRequested value)  loadTracksByAlbumRequested,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LoadTracksRequested value)  loadTracksRequested,required TResult Function( _LoadArtistsRequested value)  loadArtistsRequested,required TResult Function( _LoadAlbumsRequested value)  loadAlbumsRequested,required TResult Function( _ScanLibraryRequested value)  scanLibraryRequested,required TResult Function( _AddSingleFileRequested value)  addSingleFileRequested,required TResult Function( _SearchQueryChanged value)  searchQueryChanged,required TResult Function( _FilterByFormatRequested value)  filterByFormatRequested,required TResult Function( _LoadTracksByArtistRequested value)  loadTracksByArtistRequested,required TResult Function( _LoadTracksByAlbumRequested value)  loadTracksByAlbumRequested,}){
 final _that = this;
 switch (_that) {
 case _LoadTracksRequested():
 return loadTracksRequested(_that);case _LoadArtistsRequested():
 return loadArtistsRequested(_that);case _LoadAlbumsRequested():
 return loadAlbumsRequested(_that);case _ScanLibraryRequested():
-return scanLibraryRequested(_that);case _SearchQueryChanged():
+return scanLibraryRequested(_that);case _AddSingleFileRequested():
+return addSingleFileRequested(_that);case _SearchQueryChanged():
 return searchQueryChanged(_that);case _FilterByFormatRequested():
 return filterByFormatRequested(_that);case _LoadTracksByArtistRequested():
 return loadTracksByArtistRequested(_that);case _LoadTracksByAlbumRequested():
@@ -109,14 +111,15 @@ return loadTracksByAlbumRequested(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LoadTracksRequested value)?  loadTracksRequested,TResult? Function( _LoadArtistsRequested value)?  loadArtistsRequested,TResult? Function( _LoadAlbumsRequested value)?  loadAlbumsRequested,TResult? Function( _ScanLibraryRequested value)?  scanLibraryRequested,TResult? Function( _SearchQueryChanged value)?  searchQueryChanged,TResult? Function( _FilterByFormatRequested value)?  filterByFormatRequested,TResult? Function( _LoadTracksByArtistRequested value)?  loadTracksByArtistRequested,TResult? Function( _LoadTracksByAlbumRequested value)?  loadTracksByAlbumRequested,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LoadTracksRequested value)?  loadTracksRequested,TResult? Function( _LoadArtistsRequested value)?  loadArtistsRequested,TResult? Function( _LoadAlbumsRequested value)?  loadAlbumsRequested,TResult? Function( _ScanLibraryRequested value)?  scanLibraryRequested,TResult? Function( _AddSingleFileRequested value)?  addSingleFileRequested,TResult? Function( _SearchQueryChanged value)?  searchQueryChanged,TResult? Function( _FilterByFormatRequested value)?  filterByFormatRequested,TResult? Function( _LoadTracksByArtistRequested value)?  loadTracksByArtistRequested,TResult? Function( _LoadTracksByAlbumRequested value)?  loadTracksByAlbumRequested,}){
 final _that = this;
 switch (_that) {
 case _LoadTracksRequested() when loadTracksRequested != null:
 return loadTracksRequested(_that);case _LoadArtistsRequested() when loadArtistsRequested != null:
 return loadArtistsRequested(_that);case _LoadAlbumsRequested() when loadAlbumsRequested != null:
 return loadAlbumsRequested(_that);case _ScanLibraryRequested() when scanLibraryRequested != null:
-return scanLibraryRequested(_that);case _SearchQueryChanged() when searchQueryChanged != null:
+return scanLibraryRequested(_that);case _AddSingleFileRequested() when addSingleFileRequested != null:
+return addSingleFileRequested(_that);case _SearchQueryChanged() when searchQueryChanged != null:
 return searchQueryChanged(_that);case _FilterByFormatRequested() when filterByFormatRequested != null:
 return filterByFormatRequested(_that);case _LoadTracksByArtistRequested() when loadTracksByArtistRequested != null:
 return loadTracksByArtistRequested(_that);case _LoadTracksByAlbumRequested() when loadTracksByAlbumRequested != null:
@@ -137,13 +140,14 @@ return loadTracksByAlbumRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loadTracksRequested,TResult Function()?  loadArtistsRequested,TResult Function()?  loadAlbumsRequested,TResult Function( String directoryPath)?  scanLibraryRequested,TResult Function( String query)?  searchQueryChanged,TResult Function( AudioFormat? format)?  filterByFormatRequested,TResult Function( String artist)?  loadTracksByArtistRequested,TResult Function( String album)?  loadTracksByAlbumRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loadTracksRequested,TResult Function()?  loadArtistsRequested,TResult Function()?  loadAlbumsRequested,TResult Function( String directoryPath)?  scanLibraryRequested,TResult Function( String filePath)?  addSingleFileRequested,TResult Function( String query)?  searchQueryChanged,TResult Function( AudioFormat? format)?  filterByFormatRequested,TResult Function( String artist)?  loadTracksByArtistRequested,TResult Function( String album)?  loadTracksByAlbumRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LoadTracksRequested() when loadTracksRequested != null:
 return loadTracksRequested();case _LoadArtistsRequested() when loadArtistsRequested != null:
 return loadArtistsRequested();case _LoadAlbumsRequested() when loadAlbumsRequested != null:
 return loadAlbumsRequested();case _ScanLibraryRequested() when scanLibraryRequested != null:
-return scanLibraryRequested(_that.directoryPath);case _SearchQueryChanged() when searchQueryChanged != null:
+return scanLibraryRequested(_that.directoryPath);case _AddSingleFileRequested() when addSingleFileRequested != null:
+return addSingleFileRequested(_that.filePath);case _SearchQueryChanged() when searchQueryChanged != null:
 return searchQueryChanged(_that.query);case _FilterByFormatRequested() when filterByFormatRequested != null:
 return filterByFormatRequested(_that.format);case _LoadTracksByArtistRequested() when loadTracksByArtistRequested != null:
 return loadTracksByArtistRequested(_that.artist);case _LoadTracksByAlbumRequested() when loadTracksByAlbumRequested != null:
@@ -165,13 +169,14 @@ return loadTracksByAlbumRequested(_that.album);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loadTracksRequested,required TResult Function()  loadArtistsRequested,required TResult Function()  loadAlbumsRequested,required TResult Function( String directoryPath)  scanLibraryRequested,required TResult Function( String query)  searchQueryChanged,required TResult Function( AudioFormat? format)  filterByFormatRequested,required TResult Function( String artist)  loadTracksByArtistRequested,required TResult Function( String album)  loadTracksByAlbumRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loadTracksRequested,required TResult Function()  loadArtistsRequested,required TResult Function()  loadAlbumsRequested,required TResult Function( String directoryPath)  scanLibraryRequested,required TResult Function( String filePath)  addSingleFileRequested,required TResult Function( String query)  searchQueryChanged,required TResult Function( AudioFormat? format)  filterByFormatRequested,required TResult Function( String artist)  loadTracksByArtistRequested,required TResult Function( String album)  loadTracksByAlbumRequested,}) {final _that = this;
 switch (_that) {
 case _LoadTracksRequested():
 return loadTracksRequested();case _LoadArtistsRequested():
 return loadArtistsRequested();case _LoadAlbumsRequested():
 return loadAlbumsRequested();case _ScanLibraryRequested():
-return scanLibraryRequested(_that.directoryPath);case _SearchQueryChanged():
+return scanLibraryRequested(_that.directoryPath);case _AddSingleFileRequested():
+return addSingleFileRequested(_that.filePath);case _SearchQueryChanged():
 return searchQueryChanged(_that.query);case _FilterByFormatRequested():
 return filterByFormatRequested(_that.format);case _LoadTracksByArtistRequested():
 return loadTracksByArtistRequested(_that.artist);case _LoadTracksByAlbumRequested():
@@ -189,13 +194,14 @@ return loadTracksByAlbumRequested(_that.album);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loadTracksRequested,TResult? Function()?  loadArtistsRequested,TResult? Function()?  loadAlbumsRequested,TResult? Function( String directoryPath)?  scanLibraryRequested,TResult? Function( String query)?  searchQueryChanged,TResult? Function( AudioFormat? format)?  filterByFormatRequested,TResult? Function( String artist)?  loadTracksByArtistRequested,TResult? Function( String album)?  loadTracksByAlbumRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loadTracksRequested,TResult? Function()?  loadArtistsRequested,TResult? Function()?  loadAlbumsRequested,TResult? Function( String directoryPath)?  scanLibraryRequested,TResult? Function( String filePath)?  addSingleFileRequested,TResult? Function( String query)?  searchQueryChanged,TResult? Function( AudioFormat? format)?  filterByFormatRequested,TResult? Function( String artist)?  loadTracksByArtistRequested,TResult? Function( String album)?  loadTracksByAlbumRequested,}) {final _that = this;
 switch (_that) {
 case _LoadTracksRequested() when loadTracksRequested != null:
 return loadTracksRequested();case _LoadArtistsRequested() when loadArtistsRequested != null:
 return loadArtistsRequested();case _LoadAlbumsRequested() when loadAlbumsRequested != null:
 return loadAlbumsRequested();case _ScanLibraryRequested() when scanLibraryRequested != null:
-return scanLibraryRequested(_that.directoryPath);case _SearchQueryChanged() when searchQueryChanged != null:
+return scanLibraryRequested(_that.directoryPath);case _AddSingleFileRequested() when addSingleFileRequested != null:
+return addSingleFileRequested(_that.filePath);case _SearchQueryChanged() when searchQueryChanged != null:
 return searchQueryChanged(_that.query);case _FilterByFormatRequested() when filterByFormatRequested != null:
 return filterByFormatRequested(_that.format);case _LoadTracksByArtistRequested() when loadTracksByArtistRequested != null:
 return loadTracksByArtistRequested(_that.artist);case _LoadTracksByAlbumRequested() when loadTracksByAlbumRequested != null:
@@ -362,6 +368,72 @@ class __$ScanLibraryRequestedCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? directoryPath = null,}) {
   return _then(_ScanLibraryRequested(
 null == directoryPath ? _self.directoryPath : directoryPath // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _AddSingleFileRequested implements LibraryEvent {
+  const _AddSingleFileRequested(this.filePath);
+  
+
+ final  String filePath;
+
+/// Create a copy of LibraryEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AddSingleFileRequestedCopyWith<_AddSingleFileRequested> get copyWith => __$AddSingleFileRequestedCopyWithImpl<_AddSingleFileRequested>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AddSingleFileRequested&&(identical(other.filePath, filePath) || other.filePath == filePath));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,filePath);
+
+@override
+String toString() {
+  return 'LibraryEvent.addSingleFileRequested(filePath: $filePath)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AddSingleFileRequestedCopyWith<$Res> implements $LibraryEventCopyWith<$Res> {
+  factory _$AddSingleFileRequestedCopyWith(_AddSingleFileRequested value, $Res Function(_AddSingleFileRequested) _then) = __$AddSingleFileRequestedCopyWithImpl;
+@useResult
+$Res call({
+ String filePath
+});
+
+
+
+
+}
+/// @nodoc
+class __$AddSingleFileRequestedCopyWithImpl<$Res>
+    implements _$AddSingleFileRequestedCopyWith<$Res> {
+  __$AddSingleFileRequestedCopyWithImpl(this._self, this._then);
+
+  final _AddSingleFileRequested _self;
+  final $Res Function(_AddSingleFileRequested) _then;
+
+/// Create a copy of LibraryEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? filePath = null,}) {
+  return _then(_AddSingleFileRequested(
+null == filePath ? _self.filePath : filePath // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

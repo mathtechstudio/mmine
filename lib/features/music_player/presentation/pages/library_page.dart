@@ -86,7 +86,7 @@ class _LibraryPageState extends State<LibraryPage>
             icon: const Icon(Icons.library_add),
             tooltip: 'Add music to library',
             onPressed: () {
-              _showAddMusicDialog();
+              _showAddMusicOptionsDialog();
             },
           ),
           IconButton(
@@ -146,7 +146,81 @@ class _LibraryPageState extends State<LibraryPage>
     );
   }
 
-  void _showAddMusicDialog() {
+  void _showAddMusicOptionsDialog() {
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Add Music to Library'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Choose how you want to add music:',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  _showAddSingleFileDialog();
+                },
+                icon: const Icon(Icons.audio_file),
+                label: const Text('Add Single File'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  _showAddFolderDialog();
+                },
+                icon: const Icon(Icons.folder),
+                label: const Text('Add Folder'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddSingleFileDialog() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['flac', 'wav', 'm4a', 'alac'],
+      dialogTitle: 'Select Audio File',
+    );
+
+    if (result != null && result.files.single.path != null && mounted) {
+      final filePath = result.files.single.path!;
+      context.read<LibraryBloc>().add(
+        LibraryEvent.addSingleFileRequested(filePath),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Adding file to library...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showAddFolderDialog() {
     final libraryBloc = context.read<LibraryBloc>();
     final pathController = TextEditingController();
 
@@ -154,7 +228,7 @@ class _LibraryPageState extends State<LibraryPage>
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Add Music to Library'),
+          title: const Text('Add Folder to Library'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,

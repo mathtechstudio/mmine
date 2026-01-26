@@ -10,6 +10,7 @@ import 'package:mmine/features/music_player/data/datasources/playlist_data_sourc
 import 'package:mmine/features/music_player/data/repositories/audio_repository_impl.dart';
 import 'package:mmine/features/music_player/data/repositories/playback_repository_impl.dart';
 import 'package:mmine/features/music_player/data/repositories/playlist_repository_impl.dart';
+import 'package:mmine/features/music_player/domain/usecases/audio/add_single_file_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_albums_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_artists_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_tracks_use_case.dart';
@@ -98,6 +99,7 @@ class MyApp extends StatelessWidget {
             getTracksByArtist: GetTracksByArtistUseCase(audioRepository),
             getTracksByAlbum: GetTracksByAlbumUseCase(audioRepository),
             scanDirectory: ScanDirectoryUseCase(audioRepository),
+            addSingleFile: AddSingleFileUseCase(audioRepository),
             searchTracks: SearchTracksUseCase(audioRepository),
           ),
         ),

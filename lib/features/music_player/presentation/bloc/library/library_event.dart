@@ -11,6 +11,9 @@ sealed class LibraryEvent with _$LibraryEvent {
   const factory LibraryEvent.scanLibraryRequested(String directoryPath) =
       _ScanLibraryRequested;
 
+  const factory LibraryEvent.addSingleFileRequested(String filePath) =
+      _AddSingleFileRequested;
+
   const factory LibraryEvent.searchQueryChanged(String query) =
       _SearchQueryChanged;
 

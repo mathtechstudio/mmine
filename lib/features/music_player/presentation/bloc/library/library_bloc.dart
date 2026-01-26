@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mmine/core/error/failures.dart';
 import 'package:mmine/core/usecases/usecase.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
+import 'package:mmine/features/music_player/domain/usecases/audio/add_single_file_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_albums_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_artists_use_case.dart';
 import 'package:mmine/features/music_player/domain/usecases/audio/get_all_tracks_use_case.dart';
@@ -23,6 +24,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
   final GetTracksByArtistUseCase getTracksByArtist;
   final GetTracksByAlbumUseCase getTracksByAlbum;
   final ScanDirectoryUseCase scanDirectory;
+  final AddSingleFileUseCase addSingleFile;
   final SearchTracksUseCase searchTracks;
 
   LibraryBloc({
@@ -32,6 +34,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     required this.getTracksByArtist,
     required this.getTracksByAlbum,
     required this.scanDirectory,
+    required this.addSingleFile,
     required this.searchTracks,
   }) : super(const LibraryState.initial()) {
     on<_LoadTracksRequested>(
@@ -48,6 +51,10 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     );
     on<_ScanLibraryRequested>(
       _onScanLibraryRequested,
+      transformer: droppable(),
+    );
+    on<_AddSingleFileRequested>(
+      _onAddSingleFileRequested,
       transformer: droppable(),
     );
     on<_SearchQueryChanged>(_onSearchQueryChanged, transformer: restartable());
@@ -115,6 +122,26 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     result.fold(
       (failure) => emit(LibraryState.error(_mapFailureToMessage(failure))),
       (tracks) => emit(LibraryState.scanComplete(tracks.length)),
+    );
+  }
+
+  Future<void> _onAddSingleFileRequested(
+    _AddSingleFileRequested event,
+    Emitter<LibraryState> emit,
+  ) async {
+    emit(LibraryState.scanning(event.filePath));
+
+    final result = await addSingleFile(event.filePath);
+
+    result.fold(
+      (failure) => emit(LibraryState.error(_mapFailureToMessage(failure))),
+      (track) {
+        if (track != null) {
+          emit(const LibraryState.scanComplete(1));
+        } else {
+          emit(const LibraryState.scanComplete(0));
+        }
+      },
     );
   }
 

@@ -267,4 +267,83 @@ class AudioRepositoryImpl implements AudioRepository {
       return Left(DatabaseFailure('Failed to clear library: ${e.toString()}'));
     }
   }
+
+  @override
+  Future<Either<Failure, AudioTrack?>> addSingleFile(String filePath) async {
+    try {
+      // Check permissions
+      final hasPermission = await permissionDataSource.checkStoragePermission();
+      if (!hasPermission) {
+        final granted = await permissionDataSource.requestStoragePermission();
+        if (!granted) {
+          return const Left(
+            PermissionDeniedFailure('Storage permission denied'),
+          );
+        }
+      }
+
+      // Check if file already exists in library
+      final existingTracks = await databaseDataSource.getAllTracks();
+      final existingPaths = existingTracks.map((t) => t.filePath).toSet();
+
+      if (existingPaths.contains(filePath)) {
+        debugPrint('File already in library: $filePath');
+        return const Right(null);
+      }
+
+      // Validate format
+      final isValid = await fileSystemDataSource.validateAudioFormat(filePath);
+      if (!isValid) {
+        return const Left(InvalidFormatFailure('Unsupported audio format'));
+      }
+
+      // Extract metadata
+      final metadata = await metadataDataSource.extractMetadata(filePath);
+
+      // Get file info
+      final fileSize = await fileSystemDataSource.getFileSize(filePath);
+      final dateAdded = await fileSystemDataSource.getDateAdded(filePath);
+
+      // Save album art if available
+      String? albumArtPath;
+      if (metadata['albumArt'] != null) {
+        albumArtPath = await metadataDataSource.extractAndSaveAlbumArt(
+          filePath,
+          metadata['albumArt'] as Uint8List?,
+        );
+      }
+
+      // Create track model
+      final track = AudioTrackModel(
+        id: _uuid.v4(),
+        filePath: filePath,
+        title: metadata['title'] as String,
+        artist: metadata['artist'] as String,
+        album: metadata['album'] as String,
+        albumArtist: metadata['albumArtist'] as String?,
+        year: metadata['year'] as int?,
+        genre: metadata['genre'] as String?,
+        trackNumber: metadata['trackNumber'] as int?,
+        duration: metadata['duration'] as Duration,
+        format: metadataDataSource.getAudioFormat(filePath),
+        bitDepth: metadata['bitDepth'] as int,
+        sampleRate: metadata['sampleRate'] as int,
+        fileSize: fileSize,
+        albumArtPath: albumArtPath,
+        dateAdded: dateAdded,
+      );
+
+      // Save to database
+      await databaseDataSource.insertTracks([track]);
+
+      debugPrint('Successfully added file to library: $filePath');
+
+      return Right(track.toEntity());
+    } on PermissionDeniedFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      debugPrint('Error adding single file: $e');
+      return Left(UnknownFailure('Failed to add file: ${e.toString()}'));
+    }
+  }
 }

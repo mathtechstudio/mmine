@@ -71,4 +71,10 @@ abstract class AudioRepository {
   /// Removes all tracks from the database. This operation cannot be undone.
   /// Does not delete the actual audio files from the file system.
   Future<Either<Failure, void>> clearLibrary();
+
+  /// Adds a single audio file to the library.
+  ///
+  /// Returns the [AudioTrack] if successfully added, or a [Failure]
+  /// if the file is invalid, already exists, or cannot be processed.
+  Future<Either<Failure, AudioTrack?>> addSingleFile(String filePath);
 }
