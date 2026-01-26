@@ -113,7 +113,7 @@ class _SongsTabState extends State<SongsTab> {
                 index: index,
                 child: TrackListTile(
                   track: track,
-                  isPlaying: isPlaying,
+                  isPlaying: isCurrentTrack && isPlaying,
                   isCurrentTrack: isCurrentTrack,
                   onTap: () {
                     // If tapping on current track, toggle play/pause
