@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/widgets/settings_switch_tile.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -16,6 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _gaplessPlayback = true;
   bool _autoScanOnStartup = false;
   bool _showAlbumArt = true;
+  String _musicFolder = 'Not set';
 
   @override
   void initState() {
@@ -34,6 +38,44 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _loadSettings() async {
     // TODO: Load settings from persistent storage
     // For now, using default values
+  }
+
+  Future<void> _selectMusicFolder() async {
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Music Folder',
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _musicFolder = result;
+      });
+      // TODO: Save to persistent storage
+    }
+  }
+
+  Future<void> _scanLibrary() async {
+    if (_musicFolder == 'Not set') {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a music folder first'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    context.read<LibraryBloc>().add(
+      LibraryEvent.scanLibraryRequested(_musicFolder),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Scanning library...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -71,19 +113,15 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               ListTile(
                 title: const Text('Music Folder'),
-                subtitle: const Text('Tap to change music directory'),
+                subtitle: Text(_musicFolder),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // TODO: Show folder picker
-                },
+                onTap: _selectMusicFolder,
               ),
               ListTile(
                 title: const Text('Scan Library'),
                 subtitle: const Text('Rescan music folder for new tracks'),
                 trailing: const Icon(Icons.refresh),
-                onTap: () {
-                  // TODO: Trigger library scan
-                },
+                onTap: _scanLibrary,
               ),
               SettingsSwitchTile(
                 title: 'Auto-scan on Startup',
