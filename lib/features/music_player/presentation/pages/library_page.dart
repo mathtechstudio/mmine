@@ -147,6 +147,8 @@ class _LibraryPageState extends State<LibraryPage>
   }
 
   void _showScanDialog() {
+    final libraryBloc = context.read<LibraryBloc>();
+
     unawaited(
       showDialog<void>(
         context: context,
@@ -168,9 +170,7 @@ class _LibraryPageState extends State<LibraryPage>
                   );
 
                   if (result != null && dialogContext.mounted) {
-                    dialogContext.read<LibraryBloc>().add(
-                      LibraryEvent.scanLibraryRequested(result),
-                    );
+                    libraryBloc.add(LibraryEvent.scanLibraryRequested(result));
                     Navigator.pop(dialogContext);
                   }
                 },
