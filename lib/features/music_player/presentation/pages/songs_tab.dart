@@ -106,9 +106,6 @@ class _SongsTabState extends State<SongsTab> {
           playing: (state) {
             currentTrack = state.currentTrack;
             isPlaying = state.isPlaying;
-            debugPrint(
-              'SongsTab - Playing state: track=${currentTrack?.title}, isPlaying=$isPlaying',
-            );
           },
         );
 
@@ -131,24 +128,18 @@ class _SongsTabState extends State<SongsTab> {
                   isPlaying: isCurrentTrack && isPlaying,
                   isCurrentTrack: isCurrentTrack,
                   onTap: () {
-                    debugPrint(
-                      'Track tapped: ${track.title}, isCurrentTrack=$isCurrentTrack, isPlaying=$isPlaying',
-                    );
                     // If tapping on current track, toggle play/pause
                     if (isCurrentTrack) {
                       if (isPlaying) {
-                        debugPrint('Requesting pause');
                         context.read<PlaybackBloc>().add(
                           const PlaybackEvent.pauseRequested(),
                         );
                       } else {
-                        debugPrint('Requesting resume');
                         context.read<PlaybackBloc>().add(
                           const PlaybackEvent.resumeRequested(),
                         );
                       }
                     } else {
-                      debugPrint('Requesting play with queue');
                       // Play the track with the full queue
                       context.read<PlaybackBloc>().add(
                         PlaybackEvent.playRequested(track, tracks, index),
