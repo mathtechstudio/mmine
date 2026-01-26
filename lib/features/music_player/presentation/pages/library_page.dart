@@ -148,36 +148,65 @@ class _LibraryPageState extends State<LibraryPage>
 
   void _showScanDialog() {
     final libraryBloc = context.read<LibraryBloc>();
+    final pathController = TextEditingController();
 
     unawaited(
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: const Text('Scan Music Directory'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Select a folder containing your music files (FLAC, WAV, ALAC)',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await FilePicker.platform.getDirectoryPath(
-                    dialogTitle: 'Select Music Folder',
-                  );
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Enter the path to your music folder or use the default paths:',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: pathController,
+                  decoration: const InputDecoration(
+                    labelText: 'Folder Path',
+                    hintText: '/storage/emulated/0/Music',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Common paths:',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildPathChip('/storage/emulated/0/Music', pathController),
+                    _buildPathChip(
+                      '/storage/emulated/0/Download',
+                      pathController,
+                    ),
+                    _buildPathChip('/sdcard/Music', pathController),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await FilePicker.platform.getDirectoryPath(
+                      dialogTitle: 'Select Music Folder',
+                    );
 
-                  if (result != null && dialogContext.mounted) {
-                    libraryBloc.add(LibraryEvent.scanLibraryRequested(result));
-                    Navigator.pop(dialogContext);
-                  }
-                },
-                icon: const Icon(Icons.folder_open),
-                label: const Text('Choose Folder'),
-              ),
-            ],
+                    if (result != null) {
+                      pathController.text = result;
+                    }
+                  },
+                  icon: const Icon(Icons.folder_open),
+                  label: const Text('Browse Folder'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -186,9 +215,28 @@ class _LibraryPageState extends State<LibraryPage>
               },
               child: const Text('Cancel'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                final path = pathController.text.trim();
+                if (path.isNotEmpty) {
+                  libraryBloc.add(LibraryEvent.scanLibraryRequested(path));
+                  Navigator.pop(dialogContext);
+                }
+              },
+              child: const Text('Scan'),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPathChip(String path, TextEditingController controller) {
+    return ActionChip(
+      label: Text(path.split('/').last, style: const TextStyle(fontSize: 12)),
+      onPressed: () {
+        controller.text = path;
+      },
     );
   }
 }
