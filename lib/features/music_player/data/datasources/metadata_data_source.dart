@@ -88,17 +88,21 @@ class MetadataDataSource {
   /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
+    debugPrint('Extracting bit depth for: $filePath (extension: $extension)');
 
     // For FLAC files, try to read from STREAMINFO block
     if (extension == '.flac') {
       try {
         final bitDepth = _readFlacBitDepth(filePath);
+        debugPrint('FLAC bit depth read result: $bitDepth');
         if (bitDepth != null) {
+          debugPrint('Using FLAC bit depth: $bitDepth');
           return bitDepth;
         }
       } catch (e) {
         debugPrint('Error reading FLAC bit depth: $e');
       }
+      debugPrint('Using default FLAC bit depth: 24');
       return 24; // Default assumption for FLAC
     } else if (extension == '.wav') {
       return 16; // Default assumption for WAV
@@ -115,12 +119,15 @@ class MetadataDataSource {
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
+    debugPrint('Extracting sample rate for: $filePath (extension: $extension)');
 
     // For FLAC files, try to read from STREAMINFO block
     if (extension == '.flac') {
       try {
         final sampleRate = _readFlacSampleRate(filePath);
+        debugPrint('FLAC sample rate read result: $sampleRate');
         if (sampleRate != null) {
+          debugPrint('Using FLAC sample rate: $sampleRate Hz');
           return sampleRate;
         }
       } catch (e) {
@@ -128,6 +135,7 @@ class MetadataDataSource {
       }
     }
 
+    debugPrint('Using default sample rate: 44100 Hz');
     return 44100; // Default fallback
   }
 
@@ -137,15 +145,31 @@ class MetadataDataSource {
   /// Bit depth is stored in bits 36-40 of the STREAMINFO block.
   int? _readFlacBitDepth(String filePath) {
     try {
+      debugPrint('Reading FLAC bit depth from: $filePath');
       final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
       final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
 
       // Check FLAC signature
-      if (bytes.length < 42 ||
-          bytes[0] != 0x66 ||
+      if (bytes.length < 42) {
+        debugPrint('File too small for FLAC: ${bytes.length} bytes');
+        return null;
+      }
+
+      final signature = String.fromCharCodes(bytes.sublist(0, 4));
+      debugPrint('File signature: $signature (expected: fLaC)');
+
+      if (bytes[0] != 0x66 ||
           bytes[1] != 0x4C ||
           bytes[2] != 0x61 ||
           bytes[3] != 0x43) {
+        debugPrint('Invalid FLAC signature');
         return null;
       }
 
@@ -154,11 +178,21 @@ class MetadataDataSource {
       final byte20 = bytes[20];
       final byte21 = bytes[21];
 
+      debugPrint(
+        'Byte 20: 0x${byte20.toRadixString(16)}, Byte 21: 0x${byte21.toRadixString(16)}',
+      );
+
       // Bits per sample: 5 bits starting at bit 4 of byte 20
       // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
       final bitsPerSample = ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4);
+      final bitDepth =
+          bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
 
-      return bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
+      debugPrint(
+        'Calculated bit depth: $bitDepth (bitsPerSample: $bitsPerSample)',
+      );
+
+      return bitDepth;
     } catch (e) {
       debugPrint('Error reading FLAC bit depth: $e');
       return null;
@@ -167,19 +201,35 @@ class MetadataDataSource {
 
   /// Reads sample rate from FLAC STREAMINFO block.
   ///
-  /// FLAC STREAMINFO is located at bytes 18-21 in the file.
+  /// FLAC STREAMINFO is located at bytes 18-21 in the file.R
   /// Sample rate is stored in bits 16-35 of the STREAMINFO block.
   int? _readFlacSampleRate(String filePath) {
     try {
+      debugPrint('Reading FLAC sample rate from: $filePath');
       final file = File(filePath);
+
+      if (!file.existsSync()) {
+        debugPrint('File does not exist: $filePath');
+        return null;
+      }
+
       final bytes = file.readAsBytesSync();
+      debugPrint('File size: ${bytes.length} bytes');
 
       // Check FLAC signature
-      if (bytes.length < 42 ||
-          bytes[0] != 0x66 ||
+      if (bytes.length < 42) {
+        debugPrint('File too small for FLAC: ${bytes.length} bytes');
+        return null;
+      }
+
+      final signature = String.fromCharCodes(bytes.sublist(0, 4));
+      debugPrint('File signature: $signature (expected: fLaC)');
+
+      if (bytes[0] != 0x66 ||
           bytes[1] != 0x4C ||
           bytes[2] != 0x61 ||
           bytes[3] != 0x43) {
+        debugPrint('Invalid FLAC signature');
         return null;
       }
 
@@ -189,10 +239,16 @@ class MetadataDataSource {
       final byte19 = bytes[19];
       final byte20 = bytes[20];
 
+      debugPrint(
+        'Byte 18: 0x${byte18.toRadixString(16)}, Byte 19: 0x${byte19.toRadixString(16)}, Byte 20: 0x${byte20.toRadixString(16)}',
+      );
+
       // Sample rate: 20 bits starting at byte 18
       // Formula: (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4)
       final sampleRate =
           (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4);
+
+      debugPrint('Calculated sample rate: $sampleRate Hz');
 
       return sampleRate;
     } catch (e) {

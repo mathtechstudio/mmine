@@ -90,6 +90,10 @@ class AudioRepositoryImpl implements AudioRepository {
           // Extract metadata
           final metadata = await metadataDataSource.extractMetadata(file.path);
 
+          debugPrint(
+            'Metadata extracted - bitDepth: ${metadata['bitDepth']}, sampleRate: ${metadata['sampleRate']}',
+          );
+
           // Get file info
           final fileSize = await fileSystemDataSource.getFileSize(file.path);
           final dateAdded = await fileSystemDataSource.getDateAdded(file.path);
@@ -299,6 +303,10 @@ class AudioRepositoryImpl implements AudioRepository {
 
       // Extract metadata
       final metadata = await metadataDataSource.extractMetadata(filePath);
+
+      debugPrint(
+        'Metadata extracted - bitDepth: ${metadata['bitDepth']}, sampleRate: ${metadata['sampleRate']}',
+      );
 
       // Get file info
       final fileSize = await fileSystemDataSource.getFileSize(filePath);
