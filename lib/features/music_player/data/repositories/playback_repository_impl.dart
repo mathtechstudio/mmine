@@ -252,18 +252,19 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       }
       final startTrack = tracks[startIndex];
 
-      // Update state BEFORE starting playback to avoid race condition
+      // Start playback first
+      await audioPlayerDataSource.play(startTrack.filePath);
+
+      // Update state AFTER playback starts to ensure isPlaying is correct
+      // The playingStream will update isPlaying, but we set currentTrack immediately
       _updateState(
         _currentState.copyWith(
           queue: tracks,
           currentIndex: startIndex,
           currentTrack: startTrack,
-          isPlaying: false, // Will be set to true by playingStream
+          isPlaying: true, // Set to true since we just started playback
         ),
       );
-
-      // Now start playback
-      await audioPlayerDataSource.play(startTrack.filePath);
 
       // Update audio service notification
       final audioServiceHandler = audioPlayerDataSource.audioServiceHandler;
