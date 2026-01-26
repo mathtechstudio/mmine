@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -145,8 +146,8 @@ class NowPlayingPage extends StatelessWidget {
                     builder: (context, value, child) {
                       return Opacity(
                         opacity: value,
-                        child: Image.asset(
-                          track.albumArtPath!,
+                        child: Image.file(
+                          File(track.albumArtPath!),
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               _buildPlaceholderArt(),

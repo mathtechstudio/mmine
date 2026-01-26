@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,7 +42,10 @@ class NowPlayingBar extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute<void>(
-              builder: (context) => const NowPlayingPage(),
+              builder: (newContext) => BlocProvider.value(
+                value: context.read<PlaybackBloc>(),
+                child: const NowPlayingPage(),
+              ),
             ),
           ),
         );
@@ -127,8 +131,8 @@ class NowPlayingBar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: albumArtPath != null
-            ? Image.asset(
-                albumArtPath,
+            ? Image.file(
+                File(albumArtPath),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     _buildPlaceholder(),
