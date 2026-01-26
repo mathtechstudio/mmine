@@ -83,10 +83,10 @@ class _LibraryPageState extends State<LibraryPage>
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.folder_open),
-            tooltip: 'Scan directory',
+            icon: const Icon(Icons.library_add),
+            tooltip: 'Add music to library',
             onPressed: () {
-              _showScanDialog();
+              _showAddMusicDialog();
             },
           ),
           IconButton(
@@ -146,7 +146,7 @@ class _LibraryPageState extends State<LibraryPage>
     );
   }
 
-  void _showScanDialog() {
+  void _showAddMusicDialog() {
     final libraryBloc = context.read<LibraryBloc>();
     final pathController = TextEditingController();
 
@@ -154,14 +154,14 @@ class _LibraryPageState extends State<LibraryPage>
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Scan Music Directory'),
+          title: const Text('Add Music to Library'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Enter the path to your music folder or use the default paths:',
+                  'Select a folder containing your music files. Your files will stay in their original location.',
                   style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 16),
@@ -221,9 +221,15 @@ class _LibraryPageState extends State<LibraryPage>
                 if (path.isNotEmpty) {
                   libraryBloc.add(LibraryEvent.scanLibraryRequested(path));
                   Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Adding music to library...'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
-              child: const Text('Scan'),
+              child: const Text('Add to Library'),
             ),
           ],
         ),
