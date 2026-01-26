@@ -5,18 +5,39 @@ class TrackListTile extends StatelessWidget {
   final AudioTrack track;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final bool isPlaying;
+  final bool isCurrentTrack;
 
-  const TrackListTile({required this.track, this.onTap, this.onLongPress});
+  const TrackListTile({
+    required this.track,
+    this.onTap,
+    this.onLongPress,
+    this.isPlaying = false,
+    this.isCurrentTrack = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final titleColor = isCurrentTrack ? Theme.of(context).primaryColor : null;
+
     return ListTile(
       leading: _buildAlbumArt(),
-      title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        track.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: titleColor,
+          fontWeight: isCurrentTrack ? FontWeight.bold : null,
+        ),
+      ),
       subtitle: Text(
         '${track.artist} • ${track.album}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: isCurrentTrack ? titleColor?.withValues(alpha: 0.7) : null,
+        ),
       ),
       trailing: _buildTrailing(),
       onTap: onTap,
@@ -25,8 +46,10 @@ class TrackListTile extends StatelessWidget {
   }
 
   Widget _buildAlbumArt() {
+    Widget artWidget;
+
     if (track.albumArtPath != null) {
-      return ClipRRect(
+      artWidget = ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: Image.asset(
           track.albumArtPath!,
@@ -36,8 +59,46 @@ class TrackListTile extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
         ),
       );
+    } else {
+      artWidget = _buildPlaceholder();
     }
-    return _buildPlaceholder();
+
+    // Add play indicator overlay if this track is playing
+    if (isCurrentTrack && isPlaying) {
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          artWidget,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+          ),
+        ],
+      );
+    } else if (isCurrentTrack) {
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          artWidget,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(Icons.pause, color: Colors.white, size: 24),
+          ),
+        ],
+      );
+    }
+
+    return artWidget;
   }
 
   Widget _buildPlaceholder() {

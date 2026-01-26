@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/artist_detail_page.dart';
 import 'package:mmine/features/music_player/presentation/widgets/artist_list_tile.dart';
@@ -14,16 +15,46 @@ class ArtistsTab extends StatefulWidget {
 }
 
 class _ArtistsTabState extends State<ArtistsTab> {
+  Map<String, int> _artistTrackCounts = {};
+
   @override
   void initState() {
     super.initState();
     context.read<LibraryBloc>().add(const LibraryEvent.loadArtistsRequested());
+    unawaited(_loadTrackCounts());
+  }
+
+  Future<void> _loadTrackCounts() async {
+    // Load all tracks to count them by artist
+    context.read<LibraryBloc>().add(const LibraryEvent.loadTracksRequested());
+  }
+
+  void _updateTrackCounts(List<dynamic> tracks) {
+    final counts = <String, int>{};
+    for (final track in tracks) {
+      if (track is AudioTrack) {
+        final artist = track.artist;
+        counts[artist] = (counts[artist] ?? 0) + 1;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _artistTrackCounts = counts;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LibraryBloc, LibraryState>(
       builder: (context, state) {
+        // Update track counts when tracks are loaded
+        state.whenOrNull(
+          tracksLoaded: (tracks, filter) {
+            _updateTrackCounts(tracks);
+          },
+        );
+
         return state.when(
           initial: _buildEmpty,
           loading: _buildLoading,
@@ -49,14 +80,16 @@ class _ArtistsTabState extends State<ArtistsTab> {
         context.read<LibraryBloc>().add(
           const LibraryEvent.loadArtistsRequested(),
         );
+        await _loadTrackCounts();
       },
       child: ListView.builder(
         itemCount: artists.length,
         itemBuilder: (context, index) {
           final artist = artists[index];
+          final trackCount = _artistTrackCounts[artist] ?? 0;
           return ArtistListTile(
             artist: artist,
-            trackCount: 0,
+            trackCount: trackCount,
             onTap: () {
               unawaited(
                 Navigator.push(

@@ -85,33 +85,51 @@ class _SongsTabState extends State<SongsTab> {
       return _buildEmpty();
     }
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        context.read<LibraryBloc>().add(
-          const LibraryEvent.loadTracksRequested(),
+    return BlocBuilder<PlaybackBloc, PlaybackBlocState>(
+      builder: (context, playbackState) {
+        AudioTrack? currentTrack;
+        bool isPlaying = false;
+
+        playbackState.whenOrNull(
+          playing: (state) {
+            currentTrack = state.currentTrack;
+            isPlaying = state.isPlaying;
+          },
+        );
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<LibraryBloc>().add(
+              const LibraryEvent.loadTracksRequested(),
+            );
+          },
+          child: ListView.builder(
+            itemCount: tracks.length,
+            itemBuilder: (context, index) {
+              final track = tracks[index];
+              final isCurrentTrack = currentTrack?.id == track.id;
+
+              return AppAnimations.animatedListItem(
+                index: index,
+                child: TrackListTile(
+                  track: track,
+                  isPlaying: isPlaying,
+                  isCurrentTrack: isCurrentTrack,
+                  onTap: () {
+                    // Play the track with the full queue
+                    context.read<PlaybackBloc>().add(
+                      PlaybackEvent.playRequested(track, tracks, index),
+                    );
+                  },
+                  onLongPress: () {
+                    // TODO: Show context menu
+                  },
+                ),
+              );
+            },
+          ),
         );
       },
-      child: ListView.builder(
-        itemCount: tracks.length,
-        itemBuilder: (context, index) {
-          final track = tracks[index];
-          return AppAnimations.animatedListItem(
-            index: index,
-            child: TrackListTile(
-              track: track,
-              onTap: () {
-                // Play the track with the full queue
-                context.read<PlaybackBloc>().add(
-                  PlaybackEvent.playRequested(track, tracks, index),
-                );
-              },
-              onLongPress: () {
-                // TODO: Show context menu
-              },
-            ),
-          );
-        },
-      ),
     );
   }
 

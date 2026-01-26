@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/pages/album_detail_page.dart';
 import 'package:mmine/features/music_player/presentation/widgets/album_card.dart';
@@ -14,16 +15,46 @@ class AlbumsTab extends StatefulWidget {
 }
 
 class _AlbumsTabState extends State<AlbumsTab> {
+  Map<String, int> _albumTrackCounts = {};
+
   @override
   void initState() {
     super.initState();
     context.read<LibraryBloc>().add(const LibraryEvent.loadAlbumsRequested());
+    unawaited(_loadTrackCounts());
+  }
+
+  Future<void> _loadTrackCounts() async {
+    // Load all tracks to count them by album
+    context.read<LibraryBloc>().add(const LibraryEvent.loadTracksRequested());
+  }
+
+  void _updateTrackCounts(List<dynamic> tracks) {
+    final counts = <String, int>{};
+    for (final track in tracks) {
+      if (track is AudioTrack) {
+        final album = track.album;
+        counts[album] = (counts[album] ?? 0) + 1;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _albumTrackCounts = counts;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LibraryBloc, LibraryState>(
       builder: (context, state) {
+        // Update track counts when tracks are loaded
+        state.whenOrNull(
+          tracksLoaded: (tracks, filter) {
+            _updateTrackCounts(tracks);
+          },
+        );
+
         return state.when(
           initial: _buildEmpty,
           loading: _buildLoading,
@@ -49,6 +80,7 @@ class _AlbumsTabState extends State<AlbumsTab> {
         context.read<LibraryBloc>().add(
           const LibraryEvent.loadAlbumsRequested(),
         );
+        await _loadTrackCounts();
       },
       child: GridView.builder(
         padding: const EdgeInsets.all(8),
@@ -61,10 +93,11 @@ class _AlbumsTabState extends State<AlbumsTab> {
         itemCount: albums.length,
         itemBuilder: (context, index) {
           final album = albums[index];
+          final trackCount = _albumTrackCounts[album] ?? 0;
           return AlbumCard(
             album: album,
             artist: 'Unknown Artist',
-            trackCount: 0,
+            trackCount: trackCount,
             onTap: () {
               unawaited(
                 Navigator.push(
