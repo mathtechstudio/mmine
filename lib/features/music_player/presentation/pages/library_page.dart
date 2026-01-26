@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmine/core/utils/animations.dart';
@@ -146,20 +147,37 @@ class _LibraryPageState extends State<LibraryPage>
   }
 
   void _showScanDialog() {
-    final directoryController = TextEditingController();
-
     unawaited(
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Scan Directory'),
-          content: TextField(
-            controller: directoryController,
-            decoration: const InputDecoration(
-              labelText: 'Directory Path',
-              hintText: '/storage/emulated/0/Music',
-              border: OutlineInputBorder(),
-            ),
+          title: const Text('Scan Music Directory'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select a folder containing your music files (FLAC, WAV, ALAC)',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await FilePicker.platform.getDirectoryPath(
+                    dialogTitle: 'Select Music Folder',
+                  );
+
+                  if (result != null && dialogContext.mounted) {
+                    dialogContext.read<LibraryBloc>().add(
+                      LibraryEvent.scanLibraryRequested(result),
+                    );
+                    Navigator.pop(dialogContext);
+                  }
+                },
+                icon: const Icon(Icons.folder_open),
+                label: const Text('Choose Folder'),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -167,18 +185,6 @@ class _LibraryPageState extends State<LibraryPage>
                 Navigator.pop(dialogContext);
               },
               child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final path = directoryController.text.trim();
-                if (path.isNotEmpty) {
-                  context.read<LibraryBloc>().add(
-                    LibraryEvent.scanLibraryRequested(path),
-                  );
-                  Navigator.pop(dialogContext);
-                }
-              },
-              child: const Text('Scan'),
             ),
           ],
         ),
