@@ -17,6 +17,7 @@ class AlbumsTab extends StatefulWidget {
 
 class _AlbumsTabState extends State<AlbumsTab> {
   Map<String, int> _albumTrackCounts = {};
+  List<String> _albums = [];
 
   @override
   void initState() {
@@ -51,24 +52,54 @@ class _AlbumsTabState extends State<AlbumsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LibraryBloc, LibraryState>(
-      builder: (context, state) {
+    return BlocConsumer<LibraryBloc, LibraryState>(
+      listener: (context, state) {
         // Update track counts when tracks are loaded
         state.whenOrNull(
           tracksLoaded: (tracks, filter) {
             _updateTrackCounts(tracks);
           },
+          albumsLoaded: (albums) {
+            setState(() {
+              _albums = albums;
+            });
+          },
         );
-
+      },
+      builder: (context, state) {
         return state.when(
           initial: _buildEmpty,
           loading: _buildLoading,
           scanning: (path) => _buildScanning(path),
-          tracksLoaded: (tracks, filter) => _buildEmpty(),
-          artistsLoaded: (artists) => _buildEmpty(),
+          tracksLoaded: (tracks, filter) {
+            // Keep showing albums grid if we have albums
+            if (_albums.isNotEmpty) {
+              return _buildAlbumsGrid(_albums);
+            }
+            return _buildEmpty();
+          },
+          artistsLoaded: (artists) {
+            // Keep showing albums grid if we have albums
+            if (_albums.isNotEmpty) {
+              return _buildAlbumsGrid(_albums);
+            }
+            return _buildEmpty();
+          },
           albumsLoaded: _buildAlbumsGrid,
-          searchResults: (results, query) => _buildEmpty(),
-          scanComplete: (count) => _buildEmpty(),
+          searchResults: (results, query) {
+            // Keep showing albums grid if we have albums
+            if (_albums.isNotEmpty) {
+              return _buildAlbumsGrid(_albums);
+            }
+            return _buildEmpty();
+          },
+          scanComplete: (count) {
+            // Keep showing albums grid if we have albums
+            if (_albums.isNotEmpty) {
+              return _buildAlbumsGrid(_albums);
+            }
+            return _buildEmpty();
+          },
           error: _buildError,
         );
       },

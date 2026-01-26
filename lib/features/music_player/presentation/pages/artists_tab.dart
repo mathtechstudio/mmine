@@ -17,6 +17,7 @@ class ArtistsTab extends StatefulWidget {
 
 class _ArtistsTabState extends State<ArtistsTab> {
   Map<String, int> _artistTrackCounts = {};
+  List<String> _artists = [];
 
   @override
   void initState() {
@@ -51,24 +52,54 @@ class _ArtistsTabState extends State<ArtistsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LibraryBloc, LibraryState>(
-      builder: (context, state) {
+    return BlocConsumer<LibraryBloc, LibraryState>(
+      listener: (context, state) {
         // Update track counts when tracks are loaded
         state.whenOrNull(
           tracksLoaded: (tracks, filter) {
             _updateTrackCounts(tracks);
           },
+          artistsLoaded: (artists) {
+            setState(() {
+              _artists = artists;
+            });
+          },
         );
-
+      },
+      builder: (context, state) {
         return state.when(
           initial: _buildEmpty,
           loading: _buildLoading,
           scanning: (path) => _buildScanning(path),
-          tracksLoaded: (tracks, filter) => _buildEmpty(),
+          tracksLoaded: (tracks, filter) {
+            // Keep showing artists list if we have artists
+            if (_artists.isNotEmpty) {
+              return _buildArtistsList(_artists);
+            }
+            return _buildEmpty();
+          },
           artistsLoaded: _buildArtistsList,
-          albumsLoaded: (albums) => _buildEmpty(),
-          searchResults: (results, query) => _buildEmpty(),
-          scanComplete: (count) => _buildEmpty(),
+          albumsLoaded: (albums) {
+            // Keep showing artists list if we have artists
+            if (_artists.isNotEmpty) {
+              return _buildArtistsList(_artists);
+            }
+            return _buildEmpty();
+          },
+          searchResults: (results, query) {
+            // Keep showing artists list if we have artists
+            if (_artists.isNotEmpty) {
+              return _buildArtistsList(_artists);
+            }
+            return _buildEmpty();
+          },
+          scanComplete: (count) {
+            // Keep showing artists list if we have artists
+            if (_artists.isNotEmpty) {
+              return _buildArtistsList(_artists);
+            }
+            return _buildEmpty();
+          },
           error: _buildError,
         );
       },
