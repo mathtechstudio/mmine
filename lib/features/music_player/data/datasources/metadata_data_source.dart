@@ -84,22 +84,21 @@ class MetadataDataSource {
   /// Extracts bit depth from file metadata.
   ///
   /// Attempts to determine the bit depth based on file extension and metadata.
-  /// Returns a default value based on the audio format:
-  /// - FLAC: 24-bit (default assumption)
-  /// - WAV: 16-bit (default assumption)
-  /// - ALAC: 16-bit (default assumption)
+  /// For FLAC files, reads the STREAMINFO block to get actual bit depth.
+  /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
 
-    // Try to get from metadata if available
-    if (metadata is VorbisMetadata) {
-      // FLAC uses Vorbis comments
-      // Check if there's bit depth info in comments
-      // For now, use default
-    }
-
-    // Default based on format
+    // For FLAC files, try to read from STREAMINFO block
     if (extension == '.flac') {
+      try {
+        final bitDepth = _readFlacBitDepth(filePath);
+        if (bitDepth != null) {
+          return bitDepth;
+        }
+      } catch (e) {
+        debugPrint('Error reading FLAC bit depth: $e');
+      }
       return 24; // Default assumption for FLAC
     } else if (extension == '.wav') {
       return 16; // Default assumption for WAV
@@ -112,12 +111,94 @@ class MetadataDataSource {
 
   /// Extracts sample rate from metadata.
   ///
-  /// Attempts to extract the sample rate from the metadata.
+  /// For FLAC files, reads the STREAMINFO block to get actual sample rate.
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
-    // audio_metadata_reader doesn't expose sample rate directly
-    // Default to 44.1kHz
+    final extension = p.extension(filePath).toLowerCase();
+
+    // For FLAC files, try to read from STREAMINFO block
+    if (extension == '.flac') {
+      try {
+        final sampleRate = _readFlacSampleRate(filePath);
+        if (sampleRate != null) {
+          return sampleRate;
+        }
+      } catch (e) {
+        debugPrint('Error reading FLAC sample rate: $e');
+      }
+    }
+
     return 44100; // Default fallback
+  }
+
+  /// Reads bit depth from FLAC STREAMINFO block.
+  ///
+  /// FLAC STREAMINFO is located at bytes 18-21 in the file.
+  /// Bit depth is stored in bits 36-40 of the STREAMINFO block.
+  int? _readFlacBitDepth(String filePath) {
+    try {
+      final file = File(filePath);
+      final bytes = file.readAsBytesSync();
+
+      // Check FLAC signature
+      if (bytes.length < 42 ||
+          bytes[0] != 0x66 ||
+          bytes[1] != 0x4C ||
+          bytes[2] != 0x61 ||
+          bytes[3] != 0x43) {
+        return null;
+      }
+
+      // STREAMINFO block starts at byte 8
+      // Bit depth is at bytes 20-21 (bits 4-8 of byte 20)
+      final byte20 = bytes[20];
+      final byte21 = bytes[21];
+
+      // Bits per sample: 5 bits starting at bit 4 of byte 20
+      // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
+      final bitsPerSample = ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4);
+
+      return bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
+    } catch (e) {
+      debugPrint('Error reading FLAC bit depth: $e');
+      return null;
+    }
+  }
+
+  /// Reads sample rate from FLAC STREAMINFO block.
+  ///
+  /// FLAC STREAMINFO is located at bytes 18-21 in the file.
+  /// Sample rate is stored in bits 16-35 of the STREAMINFO block.
+  int? _readFlacSampleRate(String filePath) {
+    try {
+      final file = File(filePath);
+      final bytes = file.readAsBytesSync();
+
+      // Check FLAC signature
+      if (bytes.length < 42 ||
+          bytes[0] != 0x66 ||
+          bytes[1] != 0x4C ||
+          bytes[2] != 0x61 ||
+          bytes[3] != 0x43) {
+        return null;
+      }
+
+      // STREAMINFO block starts at byte 8
+      // Sample rate is at bytes 18-20 (20 bits)
+      final byte18 = bytes[18];
+      final byte19 = bytes[19];
+      final byte20 = bytes[20];
+
+      // Sample rate: 20 bits starting at byte 18
+      // Formula: (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4)
+      final sampleRate =
+          (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4);
+
+      return sampleRate;
+    } catch (e) {
+      debugPrint('Error reading FLAC sample rate: $e');
+      return null;
+    }
   }
 
   /// Returns default metadata when extraction fails.
