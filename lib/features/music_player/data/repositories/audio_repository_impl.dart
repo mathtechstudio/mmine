@@ -10,6 +10,20 @@ import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/domain/repositories/audio_repository.dart';
 import 'package:uuid/uuid.dart';
 
+/// Implementation of [AudioRepository] that manages audio library operations.
+///
+/// This class coordinates between multiple data sources to provide a complete
+/// audio library management solution:
+/// - [FileSystemDataSource]: Scans directories for audio files
+/// - [MetadataDataSource]: Extracts metadata from audio files
+/// - [LocalDatabaseDataSource]: Stores and retrieves tracks from database
+/// - [PermissionDataSource]: Handles storage permissions
+///
+/// The implementation handles:
+/// - Permission checking and requesting
+/// - Batch processing of files for performance
+/// - Error handling and failure reporting
+/// - Metadata extraction with fallbacks
 class AudioRepositoryImpl implements AudioRepository {
   final FileSystemDataSource fileSystemDataSource;
   final MetadataDataSource metadataDataSource;
@@ -17,6 +31,7 @@ class AudioRepositoryImpl implements AudioRepository {
   final PermissionDataSource permissionDataSource;
   final _uuid = const Uuid();
 
+  /// Creates an [AudioRepositoryImpl] with the required data sources.
   AudioRepositoryImpl({
     required this.fileSystemDataSource,
     required this.metadataDataSource,

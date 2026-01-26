@@ -7,16 +7,37 @@ import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/domain/entities/playback_state.dart';
 import 'package:mmine/features/music_player/domain/repositories/playback_repository.dart';
 
+/// Implementation of [PlaybackRepository] that manages audio playback.
+///
+/// This class coordinates with [AudioPlayerDataSource] to provide playback
+/// functionality and maintains the current playback state. It:
+/// - Manages the audio player lifecycle
+/// - Tracks playback state (playing, paused, position, etc.)
+/// - Handles queue management
+/// - Implements shuffle and repeat modes
+/// - Broadcasts state changes via a stream
+///
+/// The implementation uses a broadcast stream to allow multiple listeners
+/// to observe playback state changes.
 class PlaybackRepositoryImpl implements PlaybackRepository {
   final AudioPlayerDataSource audioPlayerDataSource;
   final _stateController = StreamController<PlaybackState>.broadcast();
 
   PlaybackState _currentState = const PlaybackState();
 
+  /// Creates a [PlaybackRepositoryImpl] with the given [audioPlayerDataSource].
+  ///
+  /// Automatically initializes the state stream to listen to player events.
   PlaybackRepositoryImpl({required this.audioPlayerDataSource}) {
     _initializeStateStream();
   }
 
+  /// Initializes listeners for audio player state changes.
+  ///
+  /// Sets up listeners for:
+  /// - Playing state changes
+  /// - Position updates
+  /// - Duration updates
   void _initializeStateStream() {
     audioPlayerDataSource.playingStream.listen((isPlaying) {
       _updateState(_currentState.copyWith(isPlaying: isPlaying));
@@ -33,6 +54,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     });
   }
 
+  /// Updates the current state and broadcasts it to listeners.
   void _updateState(PlaybackState newState) {
     _currentState = newState;
     _stateController.add(_currentState);

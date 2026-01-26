@@ -5,11 +5,26 @@ import 'package:mmine/features/music_player/data/models/playlist_model.dart';
 import 'package:mmine/features/music_player/domain/entities/playlist.dart';
 import 'package:mmine/features/music_player/domain/repositories/playlist_repository.dart';
 
+/// Implementation of [PlaylistRepository] using local database.
+///
+/// This repository provides playlist management functionality by coordinating
+/// between the domain layer and the data source layer. It handles:
+/// - CRUD operations for playlists
+/// - Track management within playlists
+/// - Track reordering
+/// - Error handling and conversion to domain failures
+///
+/// All operations are performed on the local SQLite database through the
+/// [PlaylistDataSource].
 class PlaylistRepositoryImpl implements PlaylistRepository {
   final PlaylistDataSource playlistDataSource;
 
+  /// Creates a [PlaylistRepositoryImpl] with the required data source.
   PlaylistRepositoryImpl({required this.playlistDataSource});
 
+  /// Retrieves all playlists with their associated track IDs.
+  ///
+  /// Returns a list of playlists or a [DatabaseFailure] if the operation fails.
   @override
   Future<Either<Failure, List<Playlist>>> getAllPlaylists() async {
     try {
@@ -29,6 +44,11 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Retrieves a specific playlist by its ID.
+  ///
+  /// Returns the playlist with its track IDs or a [DatabaseFailure] if:
+  /// - The playlist is not found
+  /// - The operation fails
   @override
   Future<Either<Failure, Playlist>> getPlaylistById(String id) async {
     try {
@@ -44,6 +64,11 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Creates a new playlist with the given name.
+  ///
+  /// The name is trimmed of whitespace. Returns a [DatabaseFailure] if:
+  /// - The name is empty or whitespace-only
+  /// - The operation fails
   @override
   Future<Either<Failure, Playlist>> createPlaylist(String name) async {
     try {
@@ -60,6 +85,11 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Updates an existing playlist's metadata.
+  ///
+  /// Currently only the name can be updated. Returns a [DatabaseFailure] if:
+  /// - The playlist is not found
+  /// - The operation fails
   @override
   Future<Either<Failure, void>> updatePlaylist(Playlist playlist) async {
     try {
@@ -81,6 +111,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Deletes a playlist and all its track associations.
+  ///
+  /// Note: This does not delete the actual audio files, only the playlist
+  /// and its track references.
+  ///
+  /// Returns a [DatabaseFailure] if the operation fails.
   @override
   Future<Either<Failure, void>> deletePlaylist(String id) async {
     try {
@@ -93,6 +129,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Adds a track to a playlist.
+  ///
+  /// The track is added at the end of the playlist. If the track already
+  /// exists in the playlist, it will be replaced.
+  ///
+  /// Returns a [DatabaseFailure] if the operation fails.
   @override
   Future<Either<Failure, void>> addTrackToPlaylist(
     String playlistId,
@@ -108,6 +150,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Removes a track from a playlist.
+  ///
+  /// After removal, the remaining tracks are automatically reordered to
+  /// maintain sequential positions.
+  ///
+  /// Returns a [DatabaseFailure] if the operation fails.
   @override
   Future<Either<Failure, void>> removeTrackFromPlaylist(
     String playlistId,
@@ -125,6 +173,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     }
   }
 
+  /// Reorders tracks within a playlist.
+  ///
+  /// Moves a track from [oldIndex] to [newIndex] and updates all affected
+  /// track positions accordingly.
+  ///
+  /// Returns a [DatabaseFailure] if the operation fails or indices are invalid.
   @override
   Future<Either<Failure, void>> reorderPlaylistTracks(
     String playlistId,
