@@ -1,7 +1,20 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents the audio format of a track.
+///
+/// Supported formats:
+/// - [flac]: Free Lossless Audio Codec
+/// - [wav]: Waveform Audio File Format
+/// - [alac]: Apple Lossless Audio Codec
 enum AudioFormat { flac, wav, alac }
 
+/// Represents an audio track with its metadata and quality information.
+///
+/// This entity contains all the information about a single audio track,
+/// including its metadata (title, artist, album), technical specifications
+/// (format, bit depth, sample rate), and file information.
+///
+/// The class extends [Equatable] to enable value-based equality comparison.
 class AudioTrack extends Equatable {
   final String id;
   final String filePath;
@@ -20,6 +33,10 @@ class AudioTrack extends Equatable {
   final String? albumArtPath;
   final DateTime dateAdded;
 
+  /// Creates an [AudioTrack] instance.
+  ///
+  /// All required fields must be provided. Optional fields include
+  /// [albumArtist], [year], [genre], [trackNumber], and [albumArtPath].
   const AudioTrack({
     required this.id,
     required this.filePath,
@@ -59,6 +76,11 @@ class AudioTrack extends Equatable {
     dateAdded,
   ];
 
+  /// Creates a copy of this [AudioTrack] with the given fields replaced
+  /// with new values.
+  ///
+  /// Returns a new [AudioTrack] instance with updated values for the
+  /// specified fields. Fields not provided will retain their original values.
   AudioTrack copyWith({
     String? id,
     String? filePath,

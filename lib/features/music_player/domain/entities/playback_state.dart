@@ -1,8 +1,20 @@
 import 'package:equatable/equatable.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 
+/// Defines the repeat mode for playback.
+///
+/// - [off]: No repeat, play through the queue once
+/// - [all]: Repeat the entire queue
+/// - [one]: Repeat the current track
 enum RepeatMode { off, all, one }
 
+/// Represents the current state of the audio player.
+///
+/// This entity contains all information about the current playback state,
+/// including the current track, queue, playback position, volume, speed,
+/// and playback modes (shuffle, repeat).
+///
+/// The class extends [Equatable] to enable value-based equality comparison.
 class PlaybackState extends Equatable {
   final AudioTrack? currentTrack;
   final Duration position;
@@ -16,6 +28,20 @@ class PlaybackState extends Equatable {
   final List<AudioTrack> queue;
   final int currentIndex;
 
+  /// Creates a [PlaybackState] instance.
+  ///
+  /// All fields have default values representing an idle player state.
+  /// - [currentTrack]: The currently playing or selected track (null if none)
+  /// - [position]: Current playback position
+  /// - [duration]: Total duration of the current track
+  /// - [isPlaying]: Whether audio is currently playing
+  /// - [isBuffering]: Whether audio is currently buffering
+  /// - [volume]: Volume level (0.0 to 1.0)
+  /// - [speed]: Playback speed multiplier (1.0 is normal speed)
+  /// - [repeatMode]: Current repeat mode
+  /// - [shuffleEnabled]: Whether shuffle mode is enabled
+  /// - [queue]: The list of tracks in the playback queue
+  /// - [currentIndex]: The index of the current track in the queue
   const PlaybackState({
     this.currentTrack,
     this.position = Duration.zero,
