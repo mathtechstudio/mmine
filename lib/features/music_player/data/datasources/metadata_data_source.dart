@@ -55,7 +55,12 @@ class MetadataDataSource {
     String filePath,
   ) async {
     try {
+      debugPrint('Extracting metadata from: $filePath');
       final metadata = await MetadataRetriever.fromFile(File(filePath));
+
+      debugPrint(
+        'Metadata extracted - Title: ${metadata.trackName}, Artist: ${metadata.trackArtistNames}, Duration: ${metadata.trackDuration}',
+      );
 
       return {
         'title': metadata.trackName ?? p.basenameWithoutExtension(filePath),
@@ -73,6 +78,7 @@ class MetadataDataSource {
         'albumArt': metadata.albumArt,
       };
     } catch (e) {
+      debugPrint('ERROR extracting metadata from $filePath: $e');
       return {
         'title': p.basenameWithoutExtension(filePath),
         'artist': 'Unknown Artist',
