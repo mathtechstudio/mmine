@@ -161,8 +161,13 @@ class _LibraryPageState extends State<LibraryPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Select a folder containing your music files. Your files will stay in their original location.',
+                  'Select folders containing your music files. You can add music from multiple folders.',
                   style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Files will stay in their original location. Duplicates will be skipped automatically.',
+                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 16),
                 TextField(

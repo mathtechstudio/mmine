@@ -60,11 +60,23 @@ class AudioRepositoryImpl implements AudioRepository {
         return const Right([]);
       }
 
+      // Get existing file paths to prevent duplicates
+      final existingTracks = await databaseDataSource.getAllTracks();
+      final existingPaths = existingTracks.map((t) => t.filePath).toSet();
+
       // Process files in batches to avoid blocking
       final tracks = <AudioTrackModel>[];
+      int skippedDuplicates = 0;
 
       for (final file in files) {
         try {
+          // Skip if already in library
+          if (existingPaths.contains(file.path)) {
+            skippedDuplicates++;
+            debugPrint('Skipping duplicate: ${file.path}');
+            continue;
+          }
+
           // Validate format
           final isValid = await fileSystemDataSource.validateAudioFormat(
             file.path,
@@ -122,6 +134,10 @@ class AudioRepositoryImpl implements AudioRepository {
       if (tracks.isNotEmpty) {
         await databaseDataSource.insertTracks(tracks);
       }
+
+      debugPrint(
+        'Scan complete: ${tracks.length} new tracks added, $skippedDuplicates duplicates skipped',
+      );
 
       return Right(tracks.map((t) => t.toEntity()).toList());
     } on PermissionDeniedFailure catch (e) {
