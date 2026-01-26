@@ -3,12 +3,29 @@ import 'package:mmine/features/music_player/data/datasources/database.dart';
 import 'package:mmine/features/music_player/data/models/audio_track_model.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 
+/// Data source for local database operations using Drift.
+///
+/// This class provides methods for CRUD operations on audio tracks and
+/// playlists stored in the local SQLite database. It uses the Drift
+/// package for type-safe database operations.
+///
+/// The data source handles:
+/// - Track storage and retrieval
+/// - Playlist management
+/// - Batch operations for performance
+/// - Query operations (search, filter by artist/album)
 class LocalDatabaseDataSource {
   final AppDatabase _database;
 
+  /// Creates a [LocalDatabaseDataSource] with the given [_database].
   LocalDatabaseDataSource(this._database);
 
   // Track CRUD operations
+
+  /// Inserts a single track into the database.
+  ///
+  /// If a track with the same ID already exists, it will be replaced.
+  /// Uses [InsertMode.insertOrReplace] to handle conflicts.
   Future<void> insertTrack(AudioTrackModel track) async {
     await _database
         .into(_database.tracks)
@@ -35,6 +52,12 @@ class LocalDatabaseDataSource {
         );
   }
 
+  /// Inserts multiple tracks into the database in a single batch operation.
+  ///
+  /// This is more efficient than calling [insertTrack] multiple times.
+  /// Uses batch operations to minimize database transactions.
+  ///
+  /// If tracks with the same IDs already exist, they will be replaced.
   Future<void> insertTracks(List<AudioTrackModel> tracks) async {
     await _database.batch((batch) {
       for (final track in tracks) {
