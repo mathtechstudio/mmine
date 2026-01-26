@@ -116,10 +116,23 @@ class _SongsTabState extends State<SongsTab> {
                   isPlaying: isPlaying,
                   isCurrentTrack: isCurrentTrack,
                   onTap: () {
-                    // Play the track with the full queue
-                    context.read<PlaybackBloc>().add(
-                      PlaybackEvent.playRequested(track, tracks, index),
-                    );
+                    // If tapping on current track, toggle play/pause
+                    if (isCurrentTrack) {
+                      if (isPlaying) {
+                        context.read<PlaybackBloc>().add(
+                          const PlaybackEvent.pauseRequested(),
+                        );
+                      } else {
+                        context.read<PlaybackBloc>().add(
+                          const PlaybackEvent.resumeRequested(),
+                        );
+                      }
+                    } else {
+                      // Play the track with the full queue
+                      context.read<PlaybackBloc>().add(
+                        PlaybackEvent.playRequested(track, tracks, index),
+                      );
+                    }
                   },
                   onLongPress: () {
                     // TODO: Show context menu
