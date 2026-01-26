@@ -78,7 +78,7 @@ class TrackListTile extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+            child: const Icon(Icons.pause, color: Colors.white, size: 24),
           ),
         ],
       );
@@ -94,7 +94,7 @@ class TrackListTile extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Icon(Icons.pause, color: Colors.white, size: 24),
+            child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
           ),
         ],
       );
