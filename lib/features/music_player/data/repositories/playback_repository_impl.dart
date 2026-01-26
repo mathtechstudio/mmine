@@ -251,6 +251,18 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         return Left(PlaybackFailure('Invalid start index'));
       }
       final startTrack = tracks[startIndex];
+
+      // Update state BEFORE starting playback to avoid race condition
+      _updateState(
+        _currentState.copyWith(
+          queue: tracks,
+          currentIndex: startIndex,
+          currentTrack: startTrack,
+          isPlaying: false, // Will be set to true by playingStream
+        ),
+      );
+
+      // Now start playback
       await audioPlayerDataSource.play(startTrack.filePath);
 
       // Update audio service notification
@@ -259,14 +271,6 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         await audioServiceHandler.updateQueueWithTracks(tracks, startIndex);
       }
 
-      _updateState(
-        _currentState.copyWith(
-          queue: tracks,
-          currentIndex: startIndex,
-          currentTrack: startTrack,
-          isPlaying: true,
-        ),
-      );
       return const Right(null);
     } catch (e) {
       return Left(PlaybackFailure('Failed to set queue: ${e.toString()}'));

@@ -87,8 +87,16 @@ class _SongsTabState extends State<SongsTab> {
 
     return BlocBuilder<PlaybackBloc, PlaybackBlocState>(
       buildWhen: (previous, current) {
-        // Always rebuild when state changes
-        return true;
+        // Only rebuild if playing state actually changed
+        return previous.maybeWhen(
+          playing: (prevState) => current.maybeWhen(
+            playing: (currState) =>
+                prevState.currentTrack?.id != currState.currentTrack?.id ||
+                prevState.isPlaying != currState.isPlaying,
+            orElse: () => true,
+          ),
+          orElse: () => true,
+        );
       },
       builder: (context, playbackState) {
         AudioTrack? currentTrack;
