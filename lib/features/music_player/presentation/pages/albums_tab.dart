@@ -135,11 +135,15 @@ class _AlbumsTabState extends State<AlbumsTab> {
             artist: 'Unknown Artist',
             trackCount: trackCount,
             onTap: () {
+              final libraryBloc = context.read<LibraryBloc>();
               unawaited(
                 Navigator.push(
                   context,
                   MaterialPageRoute<void>(
-                    builder: (context) => AlbumDetailPage(album: album),
+                    builder: (context) => BlocProvider.value(
+                      value: libraryBloc,
+                      child: AlbumDetailPage(album: album),
+                    ),
                   ),
                 ),
               );
