@@ -170,7 +170,9 @@ class NowPlayingBar extends StatelessWidget {
       iconSize: 28,
       onPressed: hasNext
           ? () {
-              // TODO: Skip to next
+              context.read<PlaybackBloc>().add(
+                const PlaybackEvent.skipToNextRequested(),
+              );
             }
           : null,
       color: hasNext ? Colors.black87 : Colors.grey[400],
