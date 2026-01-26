@@ -119,9 +119,15 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
 
     final result = await scanDirectory(event.directoryPath);
 
-    result.fold(
-      (failure) => emit(LibraryState.error(_mapFailureToMessage(failure))),
-      (tracks) => emit(LibraryState.scanComplete(tracks.length)),
+    await result.fold(
+      (failure) async =>
+          emit(LibraryState.error(_mapFailureToMessage(failure))),
+      (tracks) async {
+        emit(LibraryState.scanComplete(tracks.length));
+        // Auto-reload tracks after scan complete
+        await Future.delayed(const Duration(milliseconds: 500));
+        add(const LibraryEvent.loadTracksRequested());
+      },
     );
   }
 
@@ -133,14 +139,18 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
 
     final result = await addSingleFile(event.filePath);
 
-    result.fold(
-      (failure) => emit(LibraryState.error(_mapFailureToMessage(failure))),
-      (track) {
+    await result.fold(
+      (failure) async =>
+          emit(LibraryState.error(_mapFailureToMessage(failure))),
+      (track) async {
         if (track != null) {
           emit(const LibraryState.scanComplete(1));
         } else {
           emit(const LibraryState.scanComplete(0));
         }
+        // Auto-reload tracks after adding file
+        await Future.delayed(const Duration(milliseconds: 500));
+        add(const LibraryEvent.loadTracksRequested());
       },
     );
   }

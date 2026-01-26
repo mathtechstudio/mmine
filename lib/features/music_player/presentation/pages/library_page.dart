@@ -211,12 +211,6 @@ class _LibraryPageState extends State<LibraryPage>
       context.read<LibraryBloc>().add(
         LibraryEvent.addSingleFileRequested(filePath),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Adding file to library...'),
-          duration: Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -300,12 +294,6 @@ class _LibraryPageState extends State<LibraryPage>
                 if (path.isNotEmpty) {
                   libraryBloc.add(LibraryEvent.scanLibraryRequested(path));
                   Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Adding music to library...'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
                 }
               },
               child: const Text('Add to Library'),

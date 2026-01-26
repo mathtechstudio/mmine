@@ -37,6 +37,30 @@ class _SongsTabState extends State<SongsTab> {
               },
             );
           },
+          scanComplete: (tracksAdded) {
+            if (tracksAdded > 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    tracksAdded == 1
+                        ? 'Successfully added 1 track'
+                        : 'Successfully added $tracksAdded tracks',
+                  ),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'File already in library or no new tracks found',
+                  ),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
         );
       },
       builder: (context, state) {
@@ -48,7 +72,7 @@ class _SongsTabState extends State<SongsTab> {
           artistsLoaded: (_) => _buildEmpty(),
           albumsLoaded: (_) => _buildEmpty(),
           searchResults: (results, query) => _buildTracksList(results),
-          scanComplete: (_) => _buildEmpty(),
+          scanComplete: (_) => _buildLoadingSkeleton(),
           error: (message) => _buildError(message),
         );
       },
