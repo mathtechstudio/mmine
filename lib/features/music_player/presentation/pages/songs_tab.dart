@@ -4,6 +4,7 @@ import 'package:mmine/core/utils/animations.dart';
 import 'package:mmine/core/utils/error_handler.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
+import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
 import 'package:mmine/features/music_player/presentation/widgets/skeleton_track_tile.dart';
 import 'package:mmine/features/music_player/presentation/widgets/track_list_tile.dart';
 
@@ -99,7 +100,10 @@ class _SongsTabState extends State<SongsTab> {
             child: TrackListTile(
               track: track,
               onTap: () {
-                // TODO: Play track
+                // Play the track with the full queue
+                context.read<PlaybackBloc>().add(
+                  PlaybackEvent.playRequested(track, tracks, index),
+                );
               },
               onLongPress: () {
                 // TODO: Show context menu
