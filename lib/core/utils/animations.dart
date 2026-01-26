@@ -1,7 +1,41 @@
 import 'package:flutter/material.dart';
 
+/// Utility class for common UI animations in the application.
+///
+/// Provides reusable animation builders for:
+/// - Page transitions (fade, slide)
+/// - List item animations
+/// - Image fade-in effects
+/// - Button press feedback
+/// - Shimmer loading placeholders
+/// - Animated progress bars
+///
+/// All animations use consistent durations and curves for a cohesive
+/// user experience throughout the app.
+///
+/// Example usage:
+/// ```dart
+/// // Navigate with fade transition
+/// Navigator.push(context, AppAnimations.createFadeRoute(NextPage()));
+///
+/// // Animate list items
+/// ListView.builder(
+///   itemBuilder: (context, index) => AppAnimations.animatedListItem(
+///     child: ListTile(...),
+///     index: index,
+///   ),
+/// );
+/// ```
 class AppAnimations {
   // Page transition animation
+  /// Creates a fade transition route for page navigation.
+  ///
+  /// The new page fades in over 300ms.
+  ///
+  /// Example:
+  /// ```dart
+  /// Navigator.push(context, AppAnimations.createFadeRoute(DetailPage()));
+  /// ```
   static Route<T> createFadeRoute<T>(Widget page) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -12,6 +46,14 @@ class AppAnimations {
     );
   }
 
+  /// Creates a slide transition route for page navigation.
+  ///
+  /// The new page slides in from the right over 300ms with an ease-in-out curve.
+  ///
+  /// Example:
+  /// ```dart
+  /// Navigator.push(context, AppAnimations.createSlideRoute(DetailPage()));
+  /// ```
   static Route<T> createSlideRoute<T>(Widget page) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -32,6 +74,25 @@ class AppAnimations {
   }
 
   // List item animation
+  /// Animates a list item with fade-in and slide-up effect.
+  ///
+  /// Each item animates with a staggered delay based on its index,
+  /// creating a cascading effect.
+  ///
+  /// Parameters:
+  /// - [child]: The widget to animate
+  /// - [index]: The item's position in the list (for stagger delay)
+  /// - [delay]: Delay between each item's animation (default: 50ms)
+  ///
+  /// Example:
+  /// ```dart
+  /// ListView.builder(
+  ///   itemBuilder: (context, index) => AppAnimations.animatedListItem(
+  ///     child: ListTile(title: Text('Item $index')),
+  ///     index: index,
+  ///   ),
+  /// );
+  /// ```
   static Widget animatedListItem({
     required Widget child,
     required int index,
@@ -55,6 +116,25 @@ class AppAnimations {
   }
 
   // Fade in animation for images
+  /// Creates a fade-in animation for images as they load.
+  ///
+  /// Shows a placeholder while loading and fades in the image when ready.
+  /// Displays an error icon if the image fails to load.
+  ///
+  /// Parameters:
+  /// - [image]: The image provider to load
+  /// - [fit]: How the image should fit in its container
+  /// - [placeholder]: Optional widget to show while loading
+  /// - [duration]: Fade-in duration (default: 300ms)
+  ///
+  /// Example:
+  /// ```dart
+  /// AppAnimations.fadeInImage(
+  ///   image: NetworkImage('https://example.com/image.jpg'),
+  ///   fit: BoxFit.cover,
+  ///   placeholder: CircularProgressIndicator(),
+  /// );
+  /// ```
   static Widget fadeInImage({
     required ImageProvider image,
     BoxFit fit = BoxFit.cover,
@@ -85,6 +165,22 @@ class AppAnimations {
   }
 
   // Button press feedback animation
+  /// Creates a pressable button with scale animation feedback.
+  ///
+  /// The button scales down slightly when pressed, providing tactile feedback.
+  ///
+  /// Parameters:
+  /// - [child]: The button widget
+  /// - [onPressed]: Callback when button is pressed
+  /// - [duration]: Animation duration (default: 100ms)
+  ///
+  /// Example:
+  /// ```dart
+  /// AppAnimations.pressableButton(
+  ///   child: ElevatedButton(child: Text('Press Me'), onPressed: null),
+  ///   onPressed: () => print('Pressed!'),
+  /// );
+  /// ```
   static Widget pressableButton({
     required Widget child,
     required VoidCallback onPressed,
@@ -115,6 +211,24 @@ class AppAnimations {
   }
 
   // Shimmer loading animation
+  /// Creates a shimmer loading placeholder animation.
+  ///
+  /// Displays an animated gradient that moves across the container,
+  /// indicating content is loading.
+  ///
+  /// Parameters:
+  /// - [width]: Width of the shimmer container
+  /// - [height]: Height of the shimmer container
+  /// - [borderRadius]: Optional border radius for rounded corners
+  ///
+  /// Example:
+  /// ```dart
+  /// AppAnimations.shimmerLoading(
+  ///   width: 200,
+  ///   height: 20,
+  ///   borderRadius: BorderRadius.circular(8),
+  /// );
+  /// ```
   static Widget shimmerLoading({
     required double width,
     required double height,
@@ -141,6 +255,25 @@ class AppAnimations {
   }
 
   // Progress bar animation
+  /// Creates an animated progress bar.
+  ///
+  /// The progress bar smoothly animates to the target progress value.
+  ///
+  /// Parameters:
+  /// - [progress]: Progress value from 0.0 to 1.0
+  /// - [color]: Color of the progress indicator
+  /// - [backgroundColor]: Color of the background track
+  /// - [height]: Height of the progress bar (default: 4.0)
+  /// - [duration]: Animation duration (default: 200ms)
+  ///
+  /// Example:
+  /// ```dart
+  /// AppAnimations.animatedProgressBar(
+  ///   progress: 0.65,
+  ///   color: Colors.blue,
+  ///   height: 6.0,
+  /// );
+  /// ```
   static Widget animatedProgressBar({
     required double progress,
     Color? color,

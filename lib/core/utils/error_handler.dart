@@ -2,7 +2,32 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+/// Utility class for handling and displaying errors in the application.
+///
+/// Provides methods for:
+/// - Showing error dialogs with optional retry actions
+/// - Displaying error snackbars
+/// - Logging errors with context
+/// - Converting technical errors to user-friendly messages
+///
+/// Example usage:
+/// ```dart
+/// try {
+///   await someOperation();
+/// } catch (e, stackTrace) {
+///   ErrorHandler.logError('Operation', e, stackTrace);
+///   ErrorHandler.showErrorSnackBar(context,
+///     ErrorHandler.getUserFriendlyMessage(e));
+/// }
+/// ```
 class ErrorHandler {
+  /// Shows an error dialog with title, message, and optional retry action.
+  ///
+  /// Parameters:
+  /// - [context]: Build context for showing the dialog
+  /// - [title]: Dialog title
+  /// - [message]: Error message to display
+  /// - [onRetry]: Optional callback for retry button
   static void showErrorDialog(
     BuildContext context, {
     required String title,
@@ -40,6 +65,12 @@ class ErrorHandler {
     );
   }
 
+  /// Shows an error snackbar at the bottom of the screen.
+  ///
+  /// Parameters:
+  /// - [context]: Build context for showing the snackbar
+  /// - [message]: Error message to display
+  /// - [onRetry]: Optional callback for retry action
   static void showErrorSnackBar(
     BuildContext context,
     String message, {
@@ -67,6 +98,12 @@ class ErrorHandler {
     );
   }
 
+  /// Logs an error with context information.
+  ///
+  /// Parameters:
+  /// - [context]: Description of where the error occurred
+  /// - [error]: The error object
+  /// - [stackTrace]: Optional stack trace for debugging
   static void logError(
     String context,
     dynamic error, [
@@ -78,6 +115,12 @@ class ErrorHandler {
     }
   }
 
+  /// Converts technical error messages to user-friendly text.
+  ///
+  /// Analyzes the error and returns an appropriate message for common
+  /// error types like permissions, network issues, file errors, etc.
+  ///
+  /// Returns a generic message if the error type is not recognized.
   static String getUserFriendlyMessage(dynamic error) {
     if (error == null) return 'An unknown error occurred';
 
