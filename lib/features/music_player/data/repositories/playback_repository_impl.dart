@@ -128,14 +128,19 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       }
       final nextIndex = _currentState.currentIndex + 1;
       final nextTrack = _currentState.queue[nextIndex];
-      await audioPlayerDataSource.play(nextTrack.filePath);
+
+      // Update state FIRST with new track info
       _updateState(
         _currentState.copyWith(
           currentTrack: nextTrack,
           currentIndex: nextIndex,
-          isPlaying: true,
+          // Don't set isPlaying - let playingStream handle it
         ),
       );
+
+      // Then start playback - playingStream will update isPlaying
+      await audioPlayerDataSource.play(nextTrack.filePath);
+
       return const Right(null);
     } catch (e) {
       return Left(PlaybackFailure('Failed to skip to next: ${e.toString()}'));
@@ -150,14 +155,19 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       }
       final previousIndex = _currentState.currentIndex - 1;
       final previousTrack = _currentState.queue[previousIndex];
-      await audioPlayerDataSource.play(previousTrack.filePath);
+
+      // Update state FIRST with new track info
       _updateState(
         _currentState.copyWith(
           currentTrack: previousTrack,
           currentIndex: previousIndex,
-          isPlaying: true,
+          // Don't set isPlaying - let playingStream handle it
         ),
       );
+
+      // Then start playback - playingStream will update isPlaying
+      await audioPlayerDataSource.play(previousTrack.filePath);
+
       return const Right(null);
     } catch (e) {
       return Left(
