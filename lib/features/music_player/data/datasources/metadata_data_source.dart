@@ -126,32 +126,17 @@ class MetadataDataSource {
 
   /// Gets or reads FLAC audio info from cache.
   Map<String, int?> _getOrReadFlacInfo(String filePath) {
-    if (_audioInfoCache.containsKey(filePath)) {
-      return _audioInfoCache[filePath]!;
-    }
-    final info = _readFlacInfo(filePath);
-    _audioInfoCache[filePath] = info;
-    return info;
+    return _audioInfoCache.putIfAbsent(filePath, () => _readFlacInfo(filePath));
   }
 
   /// Gets or reads WAV audio info from cache.
   Map<String, int?> _getOrReadWavInfo(String filePath) {
-    if (_audioInfoCache.containsKey(filePath)) {
-      return _audioInfoCache[filePath]!;
-    }
-    final info = _readWavInfo(filePath);
-    _audioInfoCache[filePath] = info;
-    return info;
+    return _audioInfoCache.putIfAbsent(filePath, () => _readWavInfo(filePath));
   }
 
   /// Gets or reads ALAC audio info from cache.
   Map<String, int?> _getOrReadAlacInfo(String filePath) {
-    if (_audioInfoCache.containsKey(filePath)) {
-      return _audioInfoCache[filePath]!;
-    }
-    final info = _readAlacInfo(filePath);
-    _audioInfoCache[filePath] = info;
-    return info;
+    return _audioInfoCache.putIfAbsent(filePath, () => _readAlacInfo(filePath));
   }
 
   /// Reads both bit depth and sample rate from FLAC STREAMINFO block.
