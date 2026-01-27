@@ -77,6 +77,25 @@ class MetadataDataSource {
   /// Cache for audio info to avoid reading the same file multiple times.
   final Map<String, Map<String, int?>> _audioInfoCache = {};
 
+  /// Gets audio info (bit depth and sample rate) based on file extension.
+  ///
+  /// Returns a map containing bitDepth and sampleRate for the given file.
+  /// Uses cached values when available to avoid redundant file I/O.
+  Map<String, int?> _getAudioInfo(String filePath) {
+    final extension = p.extension(filePath).toLowerCase();
+
+    switch (extension) {
+      case '.flac':
+        return _getOrReadFlacInfo(filePath);
+      case '.wav':
+        return _getOrReadWavInfo(filePath);
+      case '.m4a':
+        return _getOrReadAlacInfo(filePath);
+      default:
+        return {};
+    }
+  }
+
   /// Extracts bit depth from file metadata.
   ///
   /// Attempts to determine the bit depth based on file extension and metadata.
@@ -85,16 +104,12 @@ class MetadataDataSource {
   /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
+    final info = _getAudioInfo(filePath);
     final extension = p.extension(filePath).toLowerCase();
 
     if (extension == '.flac') {
-      final info = _getOrReadFlacInfo(filePath);
       return info['bitDepth'] ?? 24;
-    } else if (extension == '.wav') {
-      final info = _getOrReadWavInfo(filePath);
-      return info['bitDepth'] ?? 16;
-    } else if (extension == '.m4a') {
-      final info = _getOrReadAlacInfo(filePath);
+    } else if (extension == '.wav' || extension == '.m4a') {
       return info['bitDepth'] ?? 16;
     }
 
@@ -108,20 +123,8 @@ class MetadataDataSource {
   /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
-    final extension = p.extension(filePath).toLowerCase();
-
-    if (extension == '.flac') {
-      final info = _getOrReadFlacInfo(filePath);
-      return info['sampleRate'] ?? 44100;
-    } else if (extension == '.wav') {
-      final info = _getOrReadWavInfo(filePath);
-      return info['sampleRate'] ?? 44100;
-    } else if (extension == '.m4a') {
-      final info = _getOrReadAlacInfo(filePath);
-      return info['sampleRate'] ?? 44100;
-    }
-
-    return 44100; // Default fallback
+    final info = _getAudioInfo(filePath);
+    return info['sampleRate'] ?? 44100;
   }
 
   /// Gets or reads FLAC audio info from cache.
