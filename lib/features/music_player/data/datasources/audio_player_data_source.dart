@@ -129,6 +129,8 @@ class AudioPlayerDataSource {
 
   /// Sets a playlist of audio files and starts at the specified index.
   ///
+  /// Uses setAudioSources for gapless playback with automatic pre-buffering.
+  ///
   /// Parameters:
   /// - [filePaths]: List of file paths to audio files
   /// - [startIndex]: Index of the track to start playing (0-based)
@@ -136,11 +138,23 @@ class AudioPlayerDataSource {
   /// Throws an exception if any file path is invalid or if the start index
   /// is out of bounds.
   Future<void> setPlaylist(List<String> filePaths, int startIndex) async {
+    // Create audio sources for each file
     final audioSources = filePaths
-        .map((path) => AudioSource.file(path))
+        .map(
+          (path) => AudioSource.file(
+            path,
+            tag: path, // Use path as tag for identification
+          ),
+        )
         .toList();
 
-    await _player.setAudioSources(audioSources, initialIndex: startIndex);
+    // Use setAudioSources for gapless playback
+    // The player will automatically pre-buffer the next track
+    await _player.setAudioSources(
+      audioSources,
+      initialIndex: startIndex,
+      preload: true, // Pre-buffer audio for smooth transitions
+    );
   }
 
   /// Gets the audio service handler for media notifications.
