@@ -74,6 +74,28 @@ class MetadataDataSource {
     }
   }
 
+  /// Cache for audio info to avoid reading the same file multiple times.
+  final Map<String, Map<String, int?>> _audioInfoCache = {};
+
+  /// Gets audio info (bit depth and sample rate) based on file extension.
+  ///
+  /// Returns a map containing bitDepth and sampleRate for the given file.
+  /// Uses cached values when available to avoid redundant file I/O.
+  Map<String, int?> _getAudioInfo(String filePath) {
+    final extension = p.extension(filePath).toLowerCase();
+
+    switch (extension) {
+      case '.flac':
+        return _getOrReadFlacInfo(filePath);
+      case '.wav':
+        return _getOrReadWavInfo(filePath);
+      case '.m4a':
+        return _getOrReadAlacInfo(filePath);
+      default:
+        return {};
+    }
+  }
+
   /// Extracts bit depth from file metadata.
   ///
   /// Attempts to determine the bit depth based on file extension and metadata.
@@ -82,38 +104,13 @@ class MetadataDataSource {
   /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
+    final info = _getAudioInfo(filePath);
     final extension = p.extension(filePath).toLowerCase();
 
     if (extension == '.flac') {
-      try {
-        final bitDepth = _readFlacBitDepth(filePath);
-        if (bitDepth != null) {
-          return bitDepth;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-      return 24;
-    } else if (extension == '.wav') {
-      try {
-        final bitDepth = _readWavBitDepth(filePath);
-        if (bitDepth != null) {
-          return bitDepth;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-      return 16;
-    } else if (extension == '.m4a') {
-      try {
-        final bitDepth = _readAlacBitDepth(filePath);
-        if (bitDepth != null) {
-          return bitDepth;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-      return 16;
+      return info['bitDepth'] ?? 24;
+    } else if (extension == '.wav' || extension == '.m4a') {
+      return info['bitDepth'] ?? 16;
     }
 
     return 16; // Default fallback
@@ -126,58 +123,44 @@ class MetadataDataSource {
   /// For ALAC (M4A) files, attempts to read from stsd atom.
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
-    final extension = p.extension(filePath).toLowerCase();
-
-    if (extension == '.flac') {
-      try {
-        final sampleRate = _readFlacSampleRate(filePath);
-        if (sampleRate != null) {
-          return sampleRate;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-    } else if (extension == '.wav') {
-      try {
-        final sampleRate = _readWavSampleRate(filePath);
-        if (sampleRate != null) {
-          return sampleRate;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-    } else if (extension == '.m4a') {
-      try {
-        final sampleRate = _readAlacSampleRate(filePath);
-        if (sampleRate != null) {
-          return sampleRate;
-        }
-      } catch (e) {
-        // Fall through to default
-      }
-    }
-
-    return 44100; // Default fallback
+    final info = _getAudioInfo(filePath);
+    return info['sampleRate'] ?? 44100;
   }
 
-  /// Reads bit depth from FLAC STREAMINFO block.
+  /// Gets or reads FLAC audio info from cache.
+  Map<String, int?> _getOrReadFlacInfo(String filePath) {
+    return _audioInfoCache.putIfAbsent(filePath, () => _readFlacInfo(filePath));
+  }
+
+  /// Gets or reads WAV audio info from cache.
+  Map<String, int?> _getOrReadWavInfo(String filePath) {
+    return _audioInfoCache.putIfAbsent(filePath, () => _readWavInfo(filePath));
+  }
+
+  /// Gets or reads ALAC audio info from cache.
+  Map<String, int?> _getOrReadAlacInfo(String filePath) {
+    return _audioInfoCache.putIfAbsent(filePath, () => _readAlacInfo(filePath));
+  }
+
+  /// Reads both bit depth and sample rate from FLAC STREAMINFO block.
   ///
   /// FLAC STREAMINFO is located at bytes 18-21 in the file.
-  /// Bit depth is stored in bits 36-40 of the STREAMINFO block.
-  int? _readFlacBitDepth(String filePath) {
+  /// Sample rate is stored in bits 16-35, bit depth in bits 36-40.
+  /// Opens the file once and reads all necessary data.
+  Map<String, int?> _readFlacInfo(String filePath) {
     RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
       raf = file.openSync();
 
       // Check file size
       if (raf.lengthSync() < 42) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
       // Read and check FLAC signature (4 bytes)
@@ -186,91 +169,54 @@ class MetadataDataSource {
           signature[1] != 0x4C ||
           signature[2] != 0x61 ||
           signature[3] != 0x43) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
-      // Seek to bit depth position (bytes 20-21)
-      raf.setPositionSync(20);
-      final bytes = raf.readSync(2);
-
-      // Bits per sample: 5 bits starting at bit 4 of byte 20
-      // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
-      final bitsPerSample = ((bytes[0] & 0x01) << 4) | ((bytes[1] & 0xF0) >> 4);
-      final bitDepth =
-          bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
-
-      return bitDepth;
-    } catch (e) {
-      return null;
-    } finally {
-      raf?.closeSync();
-    }
-  }
-
-  /// Reads sample rate from FLAC STREAMINFO block.
-  ///
-  /// FLAC STREAMINFO is located at bytes 18-21 in the file.
-  /// Sample rate is stored in bits 16-35 of the STREAMINFO block.
-  int? _readFlacSampleRate(String filePath) {
-    RandomAccessFile? raf;
-    try {
-      final file = File(filePath);
-
-      if (!file.existsSync()) {
-        return null;
-      }
-
-      raf = file.openSync();
-
-      // Check file size
-      if (raf.lengthSync() < 42) {
-        return null;
-      }
-
-      // Read and check FLAC signature (4 bytes)
-      final signature = raf.readSync(4);
-      if (signature[0] != 0x66 ||
-          signature[1] != 0x4C ||
-          signature[2] != 0x61 ||
-          signature[3] != 0x43) {
-        return null;
-      }
-
-      // Seek to sample rate position (bytes 18-20)
+      // Seek to position 18 and read 4 bytes for both sample rate and bit depth
       raf.setPositionSync(18);
-      final bytes = raf.readSync(3);
+      final metadataBytes = raf.readSync(4); // bytes 18, 19, 20, 21
 
       // Sample rate: 20 bits starting at byte 18
       // Formula: (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4)
       final sampleRate =
-          (bytes[0] << 12) | (bytes[1] << 4) | ((bytes[2] & 0xF0) >> 4);
+          (metadataBytes[0] << 12) |
+          (metadataBytes[1] << 4) |
+          ((metadataBytes[2] & 0xF0) >> 4);
 
-      return sampleRate;
+      // Bits per sample: 5 bits starting at bit 4 of byte 20
+      // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
+      final bitsPerSample =
+          ((metadataBytes[2] & 0x01) << 4) | ((metadataBytes[3] & 0xF0) >> 4);
+      final bitDepth =
+          bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
+
+      return {'bitDepth': bitDepth, 'sampleRate': sampleRate};
     } catch (e) {
-      return null;
+      return {'bitDepth': null, 'sampleRate': null};
     } finally {
       raf?.closeSync();
     }
   }
 
-  /// Reads bit depth from WAV fmt chunk.
+  /// Reads both bit depth and sample rate from WAV fmt chunk.
   ///
   /// WAV files have a RIFF header followed by fmt chunk.
-  /// Bit depth is stored at offset 34 (2 bytes, little-endian).
-  int? _readWavBitDepth(String filePath) {
+  /// Bit depth is at offset 34, sample rate at offset 24.
+  /// Opens the file once and reads all necessary data.
+  Map<String, int?> _readWavInfo(String filePath) {
     RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
       raf = file.openSync();
 
       // Check file size
       if (raf.lengthSync() < 44) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
       // Read and check RIFF signature
@@ -283,84 +229,43 @@ class MetadataDataSource {
       final waveSignature = String.fromCharCodes(waveBytes);
 
       if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
-      // Seek to bit depth position (offset 34)
-      raf.setPositionSync(34);
-      final bytes = raf.readSync(2);
-
-      // Bit depth is 2 bytes, little-endian
-      final bitDepth = bytes[0] | (bytes[1] << 8);
-
-      return bitDepth;
-    } catch (e) {
-      return null;
-    } finally {
-      raf?.closeSync();
-    }
-  }
-
-  /// Reads sample rate from WAV fmt chunk.
-  ///
-  /// WAV files have a RIFF header followed by fmt chunk.
-  /// Sample rate is stored at offset 24 (4 bytes, little-endian).
-  int? _readWavSampleRate(String filePath) {
-    RandomAccessFile? raf;
-    try {
-      final file = File(filePath);
-
-      if (!file.existsSync()) {
-        return null;
-      }
-
-      raf = file.openSync();
-
-      // Check file size
-      if (raf.lengthSync() < 44) {
-        return null;
-      }
-
-      // Read and check RIFF signature
-      final riffBytes = raf.readSync(4);
-      final riffSignature = String.fromCharCodes(riffBytes);
-
-      // Seek to WAVE signature (offset 8)
-      raf.setPositionSync(8);
-      final waveBytes = raf.readSync(4);
-      final waveSignature = String.fromCharCodes(waveBytes);
-
-      if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
-        return null;
-      }
-
-      // Seek to sample rate position (offset 24)
+      // Read sample rate (offset 24, 4 bytes)
       raf.setPositionSync(24);
-      final bytes = raf.readSync(4);
-
-      // Sample rate is 4 bytes, little-endian
+      final sampleRateBytes = raf.readSync(4);
       final sampleRate =
-          bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+          sampleRateBytes[0] |
+          (sampleRateBytes[1] << 8) |
+          (sampleRateBytes[2] << 16) |
+          (sampleRateBytes[3] << 24);
 
-      return sampleRate;
+      // Read bit depth (offset 34, 2 bytes)
+      raf.setPositionSync(34);
+      final bitDepthBytes = raf.readSync(2);
+      final bitDepth = bitDepthBytes[0] | (bitDepthBytes[1] << 8);
+
+      return {'bitDepth': bitDepth, 'sampleRate': sampleRate};
     } catch (e) {
-      return null;
+      return {'bitDepth': null, 'sampleRate': null};
     } finally {
       raf?.closeSync();
     }
   }
 
-  /// Reads bit depth from ALAC (M4A) file.
+  /// Reads both bit depth and sample rate from ALAC (M4A) file.
   ///
   /// ALAC files use MP4 container with alac atom.
-  /// This is a simplified parser that looks for the alac atom.
-  int? _readAlacBitDepth(String filePath) {
+  /// This is a simplified parser that searches for the alac atom.
+  /// Opens the file once and reads all necessary data.
+  Map<String, int?> _readAlacInfo(String filePath) {
     RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        return null;
+        return {'bitDepth': null, 'sampleRate': null};
       }
 
       raf = file.openSync();
@@ -385,65 +290,15 @@ class MetadataDataSource {
               buffer[i + 3] == 0x63) {
             // Found 'alac' atom
             // Bit depth is at offset +25 from 'alac' (1 byte)
-            if (i + 25 < bytesRead) {
-              return buffer[i + 25];
-            }
-          }
-        }
-
-        position += chunkSize;
-      }
-
-      return null;
-    } catch (e) {
-      return null;
-    } finally {
-      raf?.closeSync();
-    }
-  }
-
-  /// Reads sample rate from ALAC (M4A) file.
-  ///
-  /// ALAC files use MP4 container with alac atom.
-  /// This is a simplified parser that looks for the alac atom.
-  int? _readAlacSampleRate(String filePath) {
-    RandomAccessFile? raf;
-    try {
-      final file = File(filePath);
-
-      if (!file.existsSync()) {
-        return null;
-      }
-
-      raf = file.openSync();
-      final fileLength = raf.lengthSync();
-
-      // Read file in chunks to search for 'alac' atom
-      const chunkSize = 8192;
-      final buffer = List<int>.filled(chunkSize + 36, 0);
-      int position = 0;
-
-      while (position < fileLength) {
-        raf.setPositionSync(position);
-        final bytesRead = raf.readIntoSync(buffer, 0, chunkSize + 36);
-
-        if (bytesRead < 36) break;
-
-        // Search for 'alac' atom in current chunk
-        for (int i = 0; i < bytesRead - 36; i++) {
-          if (buffer[i] == 0x61 &&
-              buffer[i + 1] == 0x6C &&
-              buffer[i + 2] == 0x61 &&
-              buffer[i + 3] == 0x63) {
-            // Found 'alac' atom
             // Sample rate is at offset +32 from 'alac' (4 bytes, big-endian)
             if (i + 35 < bytesRead) {
+              final bitDepth = buffer[i + 25];
               final sampleRate =
                   (buffer[i + 32] << 24) |
                   (buffer[i + 33] << 16) |
                   (buffer[i + 34] << 8) |
                   buffer[i + 35];
-              return sampleRate;
+              return {'bitDepth': bitDepth, 'sampleRate': sampleRate};
             }
           }
         }
@@ -451,9 +306,9 @@ class MetadataDataSource {
         position += chunkSize;
       }
 
-      return null;
+      return {'bitDepth': null, 'sampleRate': null};
     } catch (e) {
-      return null;
+      return {'bitDepth': null, 'sampleRate': null};
     } finally {
       raf?.closeSync();
     }
