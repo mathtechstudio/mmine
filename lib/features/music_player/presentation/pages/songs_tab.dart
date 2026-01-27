@@ -6,6 +6,7 @@ import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
 import 'package:mmine/features/music_player/presentation/bloc/library/library_bloc.dart';
 import 'package:mmine/features/music_player/presentation/bloc/playback/playback_bloc.dart';
 import 'package:mmine/features/music_player/presentation/widgets/skeleton_track_tile.dart';
+import 'package:mmine/features/music_player/presentation/widgets/track_context_menu.dart';
 import 'package:mmine/features/music_player/presentation/widgets/track_list_tile.dart';
 
 class SongsTab extends StatefulWidget {
@@ -147,7 +148,7 @@ class _SongsTabState extends State<SongsTab> {
                     }
                   },
                   onLongPress: () {
-                    // TODO: Show context menu
+                    TrackContextMenu.show(context, track);
                   },
                 ),
               );
