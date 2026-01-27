@@ -89,6 +89,7 @@ void main() {
       when(
         mockPermissionDataSource.checkStoragePermission(),
       ).thenAnswer((_) async => true);
+      when(mockDatabaseDataSource.getAllTracks()).thenAnswer((_) async => []);
       when(
         mockFileSystemDataSource.scanDirectory(testPath),
       ).thenAnswer((_) async => [testFile]);
@@ -197,6 +198,7 @@ void main() {
       when(
         mockPermissionDataSource.checkStoragePermission(),
       ).thenAnswer((_) async => true);
+      when(mockDatabaseDataSource.getAllTracks()).thenAnswer((_) async => []);
       when(
         mockFileSystemDataSource.scanDirectory(testPath),
       ).thenAnswer((_) async => [testFile]);
@@ -224,6 +226,7 @@ void main() {
       when(
         mockPermissionDataSource.checkStoragePermission(),
       ).thenAnswer((_) async => true);
+      when(mockDatabaseDataSource.getAllTracks()).thenAnswer((_) async => []);
       when(
         mockFileSystemDataSource.scanDirectory(testPath),
       ).thenAnswer((_) async => [testFile]);
