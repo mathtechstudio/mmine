@@ -1,11 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dartz/dartz.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:mmine/core/error/failures.dart';
 import 'package:mmine/features/music_player/data/datasources/database.dart';
 import 'package:mmine/features/music_player/data/datasources/file_system_data_source.dart';
@@ -14,6 +10,8 @@ import 'package:mmine/features/music_player/data/datasources/metadata_data_sourc
 import 'package:mmine/features/music_player/data/datasources/permission_data_source.dart';
 import 'package:mmine/features/music_player/data/repositories/audio_repository_impl.dart';
 import 'package:mmine/features/music_player/domain/entities/audio_track.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
 import 'audio_repository_impl_test.mocks.dart';
 
@@ -44,7 +42,7 @@ void main() {
     );
   });
 
-  Track _createMockTrack({
+  Track createMockTrack({
     String id = '1',
     String title = 'Test Song',
     String artist = 'Test Artist',
@@ -282,7 +280,7 @@ void main() {
   group('getAllTracks', () {
     test('should return all tracks from database', () async {
       // Arrange
-      final mockTrack = _createMockTrack();
+      final mockTrack = createMockTrack();
 
       when(
         mockDatabaseDataSource.getAllTracks(),
@@ -321,7 +319,7 @@ void main() {
     test('should return tracks by artist', () async {
       // Arrange
       const artist = 'Test Artist';
-      final mockTrack = _createMockTrack(artist: artist);
+      final mockTrack = createMockTrack(artist: artist);
 
       when(
         mockDatabaseDataSource.getTracksByArtist(artist),
@@ -360,7 +358,7 @@ void main() {
     test('should return tracks by album', () async {
       // Arrange
       const album = 'Test Album';
-      final mockTrack = _createMockTrack(album: album);
+      final mockTrack = createMockTrack(album: album);
 
       when(
         mockDatabaseDataSource.getTracksByAlbum(album),
@@ -382,7 +380,7 @@ void main() {
     test('should return track when found', () async {
       // Arrange
       const trackId = '1';
-      final mockTrack = _createMockTrack(id: trackId);
+      final mockTrack = createMockTrack(id: trackId);
 
       when(
         mockDatabaseDataSource.getTrackById(trackId),
@@ -461,7 +459,7 @@ void main() {
     test('should return matching tracks', () async {
       // Arrange
       const query = 'test';
-      final mockTrack = _createMockTrack();
+      final mockTrack = createMockTrack();
 
       when(
         mockDatabaseDataSource.searchTracks(query),
