@@ -38,6 +38,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
   /// - Playing state changes
   /// - Position updates
   /// - Duration updates
+  /// - Current index changes (for auto-play next)
   void _initializeStateStream() {
     audioPlayerDataSource.playingStream.listen((isPlaying) {
       _updateState(_currentState.copyWith(isPlaying: isPlaying));
@@ -50,6 +51,19 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     audioPlayerDataSource.durationStream.listen((duration) {
       if (duration != null) {
         _updateState(_currentState.copyWith(duration: duration));
+      }
+    });
+
+    // Listen to current index changes for auto-play next (gapless playback)
+    audioPlayerDataSource.currentIndexStream.listen((index) {
+      if (index != null && index != _currentState.currentIndex) {
+        // Track changed automatically (gapless playback)
+        if (index < _currentState.queue.length) {
+          final newTrack = _currentState.queue[index];
+          _updateState(
+            _currentState.copyWith(currentTrack: newTrack, currentIndex: index),
+          );
+        }
       }
     });
   }
@@ -126,21 +140,11 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       if (!_currentState.hasNext) {
         return Left(PlaybackFailure('No next track in queue'));
       }
-      final nextIndex = _currentState.currentIndex + 1;
-      final nextTrack = _currentState.queue[nextIndex];
 
-      // Update state FIRST with new track info
-      _updateState(
-        _currentState.copyWith(
-          currentTrack: nextTrack,
-          currentIndex: nextIndex,
-          // Don't set isPlaying - let playingStream handle it
-        ),
-      );
+      // Use audio player's built-in skip for gapless playback
+      await audioPlayerDataSource.skipToNext();
 
-      // Then start playback - playingStream will update isPlaying
-      await audioPlayerDataSource.play(nextTrack.filePath);
-
+      // State will be updated by currentIndexStream listener
       return const Right(null);
     } catch (e) {
       return Left(PlaybackFailure('Failed to skip to next: ${e.toString()}'));
@@ -153,21 +157,11 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       if (!_currentState.hasPrevious) {
         return Left(PlaybackFailure('No previous track in queue'));
       }
-      final previousIndex = _currentState.currentIndex - 1;
-      final previousTrack = _currentState.queue[previousIndex];
 
-      // Update state FIRST with new track info
-      _updateState(
-        _currentState.copyWith(
-          currentTrack: previousTrack,
-          currentIndex: previousIndex,
-          // Don't set isPlaying - let playingStream handle it
-        ),
-      );
+      // Use audio player's built-in skip for gapless playback
+      await audioPlayerDataSource.skipToPrevious();
 
-      // Then start playback - playingStream will update isPlaying
-      await audioPlayerDataSource.play(previousTrack.filePath);
-
+      // State will be updated by currentIndexStream listener
       return const Right(null);
     } catch (e) {
       return Left(
@@ -277,8 +271,11 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         ),
       );
 
-      // Now start playback - playingStream will update isPlaying to true
-      await audioPlayerDataSource.play(startTrack.filePath);
+      // Use setPlaylist for gapless playback
+      // This loads all tracks into the player at once
+      final filePaths = tracks.map((track) => track.filePath).toList();
+      await audioPlayerDataSource.setPlaylist(filePaths, startIndex);
+      await audioPlayerDataSource.resume(); // Start playback
 
       // Update audio service notification
       final audioServiceHandler = audioPlayerDataSource.audioServiceHandler;
