@@ -188,4 +188,20 @@ class MockAudioRepository extends _i1.Mock implements _i3.AudioRepository {
             ),
           )
           as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.AudioTrack?>> addSingleFile(
+    String? filePath,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#addSingleFile, [filePath]),
+            returnValue:
+                _i4.Future<_i2.Either<_i5.Failure, _i6.AudioTrack?>>.value(
+                  _FakeEither_0<_i5.Failure, _i6.AudioTrack?>(
+                    this,
+                    Invocation.method(#addSingleFile, [filePath]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, _i6.AudioTrack?>>);
 }
