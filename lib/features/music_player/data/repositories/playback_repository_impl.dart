@@ -262,6 +262,9 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       }
       final startTrack = tracks[startIndex];
 
+      // Get current volume from audio player to ensure state is synced
+      final currentVolume = audioPlayerDataSource.volume;
+
       // Update queue and currentTrack FIRST (before starting playback)
       // This ensures the UI knows which track is about to play
       _updateState(
@@ -269,6 +272,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
           queue: tracks,
           currentIndex: startIndex,
           currentTrack: startTrack,
+          volume: currentVolume, // Sync volume with audio player
           // Don't set isPlaying here - let playingStream handle it
         ),
       );
