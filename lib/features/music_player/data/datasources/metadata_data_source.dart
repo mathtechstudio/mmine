@@ -32,14 +32,8 @@ class MetadataDataSource {
   /// - albumArt: Album art bytes (optional)
   Future<Map<String, dynamic>> extractMetadata(String filePath) async {
     try {
-      debugPrint('Extracting metadata from: $filePath');
-
       final file = File(filePath);
       final metadata = readMetadata(file, getImage: true);
-
-      debugPrint(
-        'Metadata - Title: ${metadata.title}, Artist: ${metadata.artist}, Duration: ${metadata.duration}',
-      );
 
       // Extract album art
       Uint8List? albumArtBytes;
@@ -76,7 +70,6 @@ class MetadataDataSource {
         'albumArt': albumArtBytes,
       };
     } catch (e) {
-      debugPrint('ERROR extracting metadata from $filePath: $e');
       return _getDefaultMetadata(filePath);
     }
   }
@@ -90,46 +83,36 @@ class MetadataDataSource {
   /// Returns a default value based on the audio format for other formats.
   int _extractBitDepth(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
-    debugPrint('Extracting bit depth for: $filePath (extension: $extension)');
 
     if (extension == '.flac') {
       try {
         final bitDepth = _readFlacBitDepth(filePath);
-        debugPrint('FLAC bit depth read result: $bitDepth');
         if (bitDepth != null) {
-          debugPrint('Using FLAC bit depth: $bitDepth');
           return bitDepth;
         }
       } catch (e) {
-        debugPrint('Error reading FLAC bit depth: $e');
+        // Fall through to default
       }
-      debugPrint('Using default FLAC bit depth: 24');
       return 24;
     } else if (extension == '.wav') {
       try {
         final bitDepth = _readWavBitDepth(filePath);
-        debugPrint('WAV bit depth read result: $bitDepth');
         if (bitDepth != null) {
-          debugPrint('Using WAV bit depth: $bitDepth');
           return bitDepth;
         }
       } catch (e) {
-        debugPrint('Error reading WAV bit depth: $e');
+        // Fall through to default
       }
-      debugPrint('Using default WAV bit depth: 16');
       return 16;
     } else if (extension == '.m4a') {
       try {
         final bitDepth = _readAlacBitDepth(filePath);
-        debugPrint('ALAC bit depth read result: $bitDepth');
         if (bitDepth != null) {
-          debugPrint('Using ALAC bit depth: $bitDepth');
           return bitDepth;
         }
       } catch (e) {
-        debugPrint('Error reading ALAC bit depth: $e');
+        // Fall through to default
       }
-      debugPrint('Using default ALAC bit depth: 16');
       return 16;
     }
 
@@ -144,44 +127,36 @@ class MetadataDataSource {
   /// Returns 44100 Hz (CD quality) as the default if not available.
   int _extractSampleRate(String filePath, AudioMetadata metadata) {
     final extension = p.extension(filePath).toLowerCase();
-    debugPrint('Extracting sample rate for: $filePath (extension: $extension)');
 
     if (extension == '.flac') {
       try {
         final sampleRate = _readFlacSampleRate(filePath);
-        debugPrint('FLAC sample rate read result: $sampleRate');
         if (sampleRate != null) {
-          debugPrint('Using FLAC sample rate: $sampleRate Hz');
           return sampleRate;
         }
       } catch (e) {
-        debugPrint('Error reading FLAC sample rate: $e');
+        // Fall through to default
       }
     } else if (extension == '.wav') {
       try {
         final sampleRate = _readWavSampleRate(filePath);
-        debugPrint('WAV sample rate read result: $sampleRate');
         if (sampleRate != null) {
-          debugPrint('Using WAV sample rate: $sampleRate Hz');
           return sampleRate;
         }
       } catch (e) {
-        debugPrint('Error reading WAV sample rate: $e');
+        // Fall through to default
       }
     } else if (extension == '.m4a') {
       try {
         final sampleRate = _readAlacSampleRate(filePath);
-        debugPrint('ALAC sample rate read result: $sampleRate');
         if (sampleRate != null) {
-          debugPrint('Using ALAC sample rate: $sampleRate Hz');
           return sampleRate;
         }
       } catch (e) {
-        debugPrint('Error reading ALAC sample rate: $e');
+        // Fall through to default
       }
     }
 
-    debugPrint('Using default sample rate: 44100 Hz');
     return 44100; // Default fallback
   }
 
@@ -191,31 +166,23 @@ class MetadataDataSource {
   /// Bit depth is stored in bits 36-40 of the STREAMINFO block.
   int? _readFlacBitDepth(String filePath) {
     try {
-      debugPrint('Reading FLAC bit depth from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
 
       // Check FLAC signature
       if (bytes.length < 42) {
-        debugPrint('File too small for FLAC: ${bytes.length} bytes');
         return null;
       }
-
-      final signature = String.fromCharCodes(bytes.sublist(0, 4));
-      debugPrint('File signature: $signature (expected: fLaC)');
 
       if (bytes[0] != 0x66 ||
           bytes[1] != 0x4C ||
           bytes[2] != 0x61 ||
           bytes[3] != 0x43) {
-        debugPrint('Invalid FLAC signature');
         return null;
       }
 
@@ -224,58 +191,41 @@ class MetadataDataSource {
       final byte20 = bytes[20];
       final byte21 = bytes[21];
 
-      debugPrint(
-        'Byte 20: 0x${byte20.toRadixString(16)}, Byte 21: 0x${byte21.toRadixString(16)}',
-      );
-
       // Bits per sample: 5 bits starting at bit 4 of byte 20
       // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
       final bitsPerSample = ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4);
       final bitDepth =
           bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
 
-      debugPrint(
-        'Calculated bit depth: $bitDepth (bitsPerSample: $bitsPerSample)',
-      );
-
       return bitDepth;
     } catch (e) {
-      debugPrint('Error reading FLAC bit depth: $e');
       return null;
     }
   }
 
   /// Reads sample rate from FLAC STREAMINFO block.
   ///
-  /// FLAC STREAMINFO is located at bytes 18-21 in the file.R
+  /// FLAC STREAMINFO is located at bytes 18-21 in the file.
   /// Sample rate is stored in bits 16-35 of the STREAMINFO block.
   int? _readFlacSampleRate(String filePath) {
     try {
-      debugPrint('Reading FLAC sample rate from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
 
       // Check FLAC signature
       if (bytes.length < 42) {
-        debugPrint('File too small for FLAC: ${bytes.length} bytes');
         return null;
       }
-
-      final signature = String.fromCharCodes(bytes.sublist(0, 4));
-      debugPrint('File signature: $signature (expected: fLaC)');
 
       if (bytes[0] != 0x66 ||
           bytes[1] != 0x4C ||
           bytes[2] != 0x61 ||
           bytes[3] != 0x43) {
-        debugPrint('Invalid FLAC signature');
         return null;
       }
 
@@ -285,20 +235,13 @@ class MetadataDataSource {
       final byte19 = bytes[19];
       final byte20 = bytes[20];
 
-      debugPrint(
-        'Byte 18: 0x${byte18.toRadixString(16)}, Byte 19: 0x${byte19.toRadixString(16)}, Byte 20: 0x${byte20.toRadixString(16)}',
-      );
-
       // Sample rate: 20 bits starting at byte 18
       // Formula: (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4)
       final sampleRate =
           (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4);
 
-      debugPrint('Calculated sample rate: $sampleRate Hz');
-
       return sampleRate;
     } catch (e) {
-      debugPrint('Error reading FLAC sample rate: $e');
       return null;
     }
   }
@@ -309,42 +252,31 @@ class MetadataDataSource {
   /// Bit depth is stored at offset 34 (2 bytes, little-endian).
   int? _readWavBitDepth(String filePath) {
     try {
-      debugPrint('Reading WAV bit depth from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
 
       // Check RIFF signature
       if (bytes.length < 44) {
-        debugPrint('File too small for WAV: ${bytes.length} bytes');
         return null;
       }
 
       final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
       final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
-      debugPrint(
-        'File signature: $riffSignature / $waveSignature (expected: RIFF / WAVE)',
-      );
 
       if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
-        debugPrint('Invalid WAV signature');
         return null;
       }
 
       // Bit depth is at offset 34 (2 bytes, little-endian)
       final bitDepth = bytes[34] | (bytes[35] << 8);
 
-      debugPrint('Calculated bit depth: $bitDepth');
-
       return bitDepth;
     } catch (e) {
-      debugPrint('Error reading WAV bit depth: $e');
       return null;
     }
   }
@@ -355,31 +287,23 @@ class MetadataDataSource {
   /// Sample rate is stored at offset 24 (4 bytes, little-endian).
   int? _readWavSampleRate(String filePath) {
     try {
-      debugPrint('Reading WAV sample rate from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
 
       // Check RIFF signature
       if (bytes.length < 44) {
-        debugPrint('File too small for WAV: ${bytes.length} bytes');
         return null;
       }
 
       final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
       final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
-      debugPrint(
-        'File signature: $riffSignature / $waveSignature (expected: RIFF / WAVE)',
-      );
 
       if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
-        debugPrint('Invalid WAV signature');
         return null;
       }
 
@@ -387,11 +311,8 @@ class MetadataDataSource {
       final sampleRate =
           bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24);
 
-      debugPrint('Calculated sample rate: $sampleRate Hz');
-
       return sampleRate;
     } catch (e) {
-      debugPrint('Error reading WAV sample rate: $e');
       return null;
     }
   }
@@ -402,16 +323,13 @@ class MetadataDataSource {
   /// This is a simplified parser that looks for the alac atom.
   int? _readAlacBitDepth(String filePath) {
     try {
-      debugPrint('Reading ALAC bit depth from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
 
       // Look for 'alac' atom in the file
       // This is a simplified search - proper MP4 parsing would be more complex
@@ -424,16 +342,13 @@ class MetadataDataSource {
           // Bit depth is at offset +25 from 'alac' (1 byte)
           if (i + 25 < bytes.length) {
             final bitDepth = bytes[i + 25];
-            debugPrint('Found ALAC atom, bit depth: $bitDepth');
             return bitDepth;
           }
         }
       }
 
-      debugPrint('ALAC atom not found');
       return null;
     } catch (e) {
-      debugPrint('Error reading ALAC bit depth: $e');
       return null;
     }
   }
@@ -444,17 +359,13 @@ class MetadataDataSource {
   /// This is a simplified parser that looks for the alac atom.
   int? _readAlacSampleRate(String filePath) {
     try {
-      debugPrint('Reading ALAC sample rate from: $filePath');
       final file = File(filePath);
 
       if (!file.existsSync()) {
-        debugPrint('File does not exist: $filePath');
         return null;
       }
 
       final bytes = file.readAsBytesSync();
-      debugPrint('File size: ${bytes.length} bytes');
-
       // Look for 'alac' atom in the file
       for (int i = 0; i < bytes.length - 36; i++) {
         if (bytes[i] == 0x61 &&
@@ -469,16 +380,13 @@ class MetadataDataSource {
                 (bytes[i + 33] << 16) |
                 (bytes[i + 34] << 8) |
                 bytes[i + 35];
-            debugPrint('Found ALAC atom, sample rate: $sampleRate Hz');
             return sampleRate;
           }
         }
       }
 
-      debugPrint('ALAC atom not found');
       return null;
     } catch (e) {
-      debugPrint('Error reading ALAC sample rate: $e');
       return null;
     }
   }
