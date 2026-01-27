@@ -165,6 +165,7 @@ class MetadataDataSource {
   /// FLAC STREAMINFO is located at bytes 18-21 in the file.
   /// Bit depth is stored in bits 36-40 of the STREAMINFO block.
   int? _readFlacBitDepth(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -172,34 +173,37 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
+      raf = file.openSync();
 
-      // Check FLAC signature
-      if (bytes.length < 42) {
+      // Check file size
+      if (raf.lengthSync() < 42) {
         return null;
       }
 
-      if (bytes[0] != 0x66 ||
-          bytes[1] != 0x4C ||
-          bytes[2] != 0x61 ||
-          bytes[3] != 0x43) {
+      // Read and check FLAC signature (4 bytes)
+      final signature = raf.readSync(4);
+      if (signature[0] != 0x66 ||
+          signature[1] != 0x4C ||
+          signature[2] != 0x61 ||
+          signature[3] != 0x43) {
         return null;
       }
 
-      // STREAMINFO block starts at byte 8
-      // Bit depth is at bytes 20-21 (bits 4-8 of byte 20)
-      final byte20 = bytes[20];
-      final byte21 = bytes[21];
+      // Seek to bit depth position (bytes 20-21)
+      raf.setPositionSync(20);
+      final bytes = raf.readSync(2);
 
       // Bits per sample: 5 bits starting at bit 4 of byte 20
       // Formula: ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4)
-      final bitsPerSample = ((byte20 & 0x01) << 4) | ((byte21 & 0xF0) >> 4);
+      final bitsPerSample = ((bytes[0] & 0x01) << 4) | ((bytes[1] & 0xF0) >> 4);
       final bitDepth =
           bitsPerSample + 1; // Add 1 because it's stored as (bps - 1)
 
       return bitDepth;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
@@ -208,6 +212,7 @@ class MetadataDataSource {
   /// FLAC STREAMINFO is located at bytes 18-21 in the file.
   /// Sample rate is stored in bits 16-35 of the STREAMINFO block.
   int? _readFlacSampleRate(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -215,34 +220,36 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
+      raf = file.openSync();
 
-      // Check FLAC signature
-      if (bytes.length < 42) {
+      // Check file size
+      if (raf.lengthSync() < 42) {
         return null;
       }
 
-      if (bytes[0] != 0x66 ||
-          bytes[1] != 0x4C ||
-          bytes[2] != 0x61 ||
-          bytes[3] != 0x43) {
+      // Read and check FLAC signature (4 bytes)
+      final signature = raf.readSync(4);
+      if (signature[0] != 0x66 ||
+          signature[1] != 0x4C ||
+          signature[2] != 0x61 ||
+          signature[3] != 0x43) {
         return null;
       }
 
-      // STREAMINFO block starts at byte 8
-      // Sample rate is at bytes 18-20 (20 bits)
-      final byte18 = bytes[18];
-      final byte19 = bytes[19];
-      final byte20 = bytes[20];
+      // Seek to sample rate position (bytes 18-20)
+      raf.setPositionSync(18);
+      final bytes = raf.readSync(3);
 
       // Sample rate: 20 bits starting at byte 18
       // Formula: (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4)
       final sampleRate =
-          (byte18 << 12) | (byte19 << 4) | ((byte20 & 0xF0) >> 4);
+          (bytes[0] << 12) | (bytes[1] << 4) | ((bytes[2] & 0xF0) >> 4);
 
       return sampleRate;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
@@ -251,6 +258,7 @@ class MetadataDataSource {
   /// WAV files have a RIFF header followed by fmt chunk.
   /// Bit depth is stored at offset 34 (2 bytes, little-endian).
   int? _readWavBitDepth(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -258,26 +266,38 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
+      raf = file.openSync();
 
-      // Check RIFF signature
-      if (bytes.length < 44) {
+      // Check file size
+      if (raf.lengthSync() < 44) {
         return null;
       }
 
-      final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
-      final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
+      // Read and check RIFF signature
+      final riffBytes = raf.readSync(4);
+      final riffSignature = String.fromCharCodes(riffBytes);
+
+      // Seek to WAVE signature (offset 8)
+      raf.setPositionSync(8);
+      final waveBytes = raf.readSync(4);
+      final waveSignature = String.fromCharCodes(waveBytes);
 
       if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
         return null;
       }
 
-      // Bit depth is at offset 34 (2 bytes, little-endian)
-      final bitDepth = bytes[34] | (bytes[35] << 8);
+      // Seek to bit depth position (offset 34)
+      raf.setPositionSync(34);
+      final bytes = raf.readSync(2);
+
+      // Bit depth is 2 bytes, little-endian
+      final bitDepth = bytes[0] | (bytes[1] << 8);
 
       return bitDepth;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
@@ -286,6 +306,7 @@ class MetadataDataSource {
   /// WAV files have a RIFF header followed by fmt chunk.
   /// Sample rate is stored at offset 24 (4 bytes, little-endian).
   int? _readWavSampleRate(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -293,27 +314,39 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
+      raf = file.openSync();
 
-      // Check RIFF signature
-      if (bytes.length < 44) {
+      // Check file size
+      if (raf.lengthSync() < 44) {
         return null;
       }
 
-      final riffSignature = String.fromCharCodes(bytes.sublist(0, 4));
-      final waveSignature = String.fromCharCodes(bytes.sublist(8, 12));
+      // Read and check RIFF signature
+      final riffBytes = raf.readSync(4);
+      final riffSignature = String.fromCharCodes(riffBytes);
+
+      // Seek to WAVE signature (offset 8)
+      raf.setPositionSync(8);
+      final waveBytes = raf.readSync(4);
+      final waveSignature = String.fromCharCodes(waveBytes);
 
       if (riffSignature != 'RIFF' || waveSignature != 'WAVE') {
         return null;
       }
 
-      // Sample rate is at offset 24 (4 bytes, little-endian)
+      // Seek to sample rate position (offset 24)
+      raf.setPositionSync(24);
+      final bytes = raf.readSync(4);
+
+      // Sample rate is 4 bytes, little-endian
       final sampleRate =
-          bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24);
+          bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
 
       return sampleRate;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
@@ -322,6 +355,7 @@ class MetadataDataSource {
   /// ALAC files use MP4 container with alac atom.
   /// This is a simplified parser that looks for the alac atom.
   int? _readAlacBitDepth(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -329,27 +363,42 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
+      raf = file.openSync();
+      final fileLength = raf.lengthSync();
 
-      // Look for 'alac' atom in the file
-      // This is a simplified search - proper MP4 parsing would be more complex
-      for (int i = 0; i < bytes.length - 36; i++) {
-        if (bytes[i] == 0x61 &&
-            bytes[i + 1] == 0x6C &&
-            bytes[i + 2] == 0x61 &&
-            bytes[i + 3] == 0x63) {
-          // Found 'alac' atom
-          // Bit depth is at offset +25 from 'alac' (1 byte)
-          if (i + 25 < bytes.length) {
-            final bitDepth = bytes[i + 25];
-            return bitDepth;
+      // Read file in chunks to search for 'alac' atom
+      const chunkSize = 8192;
+      final buffer = List<int>.filled(chunkSize + 36, 0);
+      int position = 0;
+
+      while (position < fileLength) {
+        raf.setPositionSync(position);
+        final bytesRead = raf.readIntoSync(buffer, 0, chunkSize + 36);
+
+        if (bytesRead < 36) break;
+
+        // Search for 'alac' atom in current chunk
+        for (int i = 0; i < bytesRead - 36; i++) {
+          if (buffer[i] == 0x61 &&
+              buffer[i + 1] == 0x6C &&
+              buffer[i + 2] == 0x61 &&
+              buffer[i + 3] == 0x63) {
+            // Found 'alac' atom
+            // Bit depth is at offset +25 from 'alac' (1 byte)
+            if (i + 25 < bytesRead) {
+              return buffer[i + 25];
+            }
           }
         }
+
+        position += chunkSize;
       }
 
       return null;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
@@ -358,6 +407,7 @@ class MetadataDataSource {
   /// ALAC files use MP4 container with alac atom.
   /// This is a simplified parser that looks for the alac atom.
   int? _readAlacSampleRate(String filePath) {
+    RandomAccessFile? raf;
     try {
       final file = File(filePath);
 
@@ -365,29 +415,47 @@ class MetadataDataSource {
         return null;
       }
 
-      final bytes = file.readAsBytesSync();
-      // Look for 'alac' atom in the file
-      for (int i = 0; i < bytes.length - 36; i++) {
-        if (bytes[i] == 0x61 &&
-            bytes[i + 1] == 0x6C &&
-            bytes[i + 2] == 0x61 &&
-            bytes[i + 3] == 0x63) {
-          // Found 'alac' atom
-          // Sample rate is at offset +32 from 'alac' (4 bytes, big-endian)
-          if (i + 35 < bytes.length) {
-            final sampleRate =
-                (bytes[i + 32] << 24) |
-                (bytes[i + 33] << 16) |
-                (bytes[i + 34] << 8) |
-                bytes[i + 35];
-            return sampleRate;
+      raf = file.openSync();
+      final fileLength = raf.lengthSync();
+
+      // Read file in chunks to search for 'alac' atom
+      const chunkSize = 8192;
+      final buffer = List<int>.filled(chunkSize + 36, 0);
+      int position = 0;
+
+      while (position < fileLength) {
+        raf.setPositionSync(position);
+        final bytesRead = raf.readIntoSync(buffer, 0, chunkSize + 36);
+
+        if (bytesRead < 36) break;
+
+        // Search for 'alac' atom in current chunk
+        for (int i = 0; i < bytesRead - 36; i++) {
+          if (buffer[i] == 0x61 &&
+              buffer[i + 1] == 0x6C &&
+              buffer[i + 2] == 0x61 &&
+              buffer[i + 3] == 0x63) {
+            // Found 'alac' atom
+            // Sample rate is at offset +32 from 'alac' (4 bytes, big-endian)
+            if (i + 35 < bytesRead) {
+              final sampleRate =
+                  (buffer[i + 32] << 24) |
+                  (buffer[i + 33] << 16) |
+                  (buffer[i + 34] << 8) |
+                  buffer[i + 35];
+              return sampleRate;
+            }
           }
         }
+
+        position += chunkSize;
       }
 
       return null;
     } catch (e) {
       return null;
+    } finally {
+      raf?.closeSync();
     }
   }
 
