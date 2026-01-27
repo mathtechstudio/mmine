@@ -26,6 +26,7 @@ void main() {
       expect(playlist.name, driftPlaylist.name);
       expect(playlist.trackIds, trackIds);
       expect(playlist.trackCount, 3);
+      // ignore: unnecessary_type_check
       expect(playlist is Playlist, true);
     });
 

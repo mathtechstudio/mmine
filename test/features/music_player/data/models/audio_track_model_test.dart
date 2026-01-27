@@ -55,6 +55,7 @@ void main() {
       expect(entity.id, model.id);
       expect(entity.title, model.title);
       expect(entity.artist, model.artist);
+      // ignore: unnecessary_type_check
       expect(entity is AudioTrack, true);
     });
 
